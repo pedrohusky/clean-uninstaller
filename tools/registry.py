@@ -76,13 +76,16 @@ class Registry:
 
     def _delete_key(self, key, sub_key_name: str):
         with winreg.OpenKey(key, sub_key_name, 0, winreg.KEY_ALL_ACCESS) as sub_key:
-            num, _, _ = winreg.QueryInfoKey(sub_key)
-            for i in range(num):
+            while True:
                 try:
-                    sub_sub_key_name = winreg.EnumKey(sub_key, i)
-                    self._delete_key(sub_key, sub_sub_key_name)
+                    try:
+                        sub_sub_key_name = winreg.EnumKey(sub_key, 0)
+                        self._delete_key(sub_key, sub_sub_key_name)
+                    except:
+                        sub_sub_key_name = winreg.EnumKey(sub_key, 1)
+                        self._delete_key(sub_key, sub_sub_key_name)
                 except OSError:
-                    pass
+                    break
 
         winreg.DeleteKey(key, sub_key_name)
 
@@ -94,29 +97,27 @@ class Registry:
                 print(f"Opened registry key: {self.hkey_names[root]}\\{sub}")
                 num, _, _ = winreg.QueryInfoKey(open_key)
                 print(f"Found {num} sub_keys under {self.hkey_names[root]}\\{sub}")
-                for i in range(num):
-                    child = winreg.EnumKey(open_key, i)
+                for _ in range(num):
+                    child = winreg.EnumKey(open_key, 0)
                     if should_delete:
-                        print(f"Deleting sub key: {self.hkey_names[root]}\\{sub}\\{child}")
+                        print(f"Deleting registry key: {self.hkey_names[root]}\\{sub}\\{child}")
                         self._delete_key(open_key, child)
-                        print(f"Deleted sub key: {self.hkey_names[root]}\\{sub}\\{child}")
                     else:
-                        print(f"Would be deleting sub key: {self.hkey_names[root]}\\{sub}\\{child}")
+                        print(f"Would be deleting registry key: {self.hkey_names[root]}\\{sub}\\{child}")
                     registry_keys.append(f"{self.hkey_names[root]}\\{sub}\\{child}")
 
                 try:
                     if should_delete:
-                        print(f"Deleting MAIN registry key: {self.hkey_names[root]}\\{sub}")
+                        print(f"Deleted registry key: {self.hkey_names[root]}\\{sub}")
                         winreg.DeleteKey(open_key, '')
-                        print(f"Deleted MAIN registry key: {self.hkey_names[root]}\\{sub}")
                     else:
-                        print(f"Would be deleted MAIN registry key: {self.hkey_names[root]}\\{sub}")
+                        print(f"Would be deleted registry key: {self.hkey_names[root]}\\{sub}")
                     registry_keys.append(f"{self.hkey_names[root]}\\{sub}")
-                except OSError:
+                except WindowsError:
                     continue
                 finally:
                     winreg.CloseKey(open_key)
-            except OSError:
+            except WindowsError:
                 continue
         return registry_keys
 
