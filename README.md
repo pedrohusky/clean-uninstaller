@@ -1,13 +1,11 @@
 # Uni-Clean
-
-{ICON}
+<img src="https://github.com/pedrohusky/clean-uninstaller/assets/59580251/9aacc6b5-9001-4459-9f9c-a8450162ca80" width="200" height="200"> 
 
 An uninstaller tool built with PyQt6 to improve the uninstalling of programs and making it as easy as copy a file.
 Adds a new context menu under the Right click in any folder.
 This really does a clean uninstall. I think even better than the windows "Uninstall Program". Besides, it should work in every OS.
 
-{IMAGES} 
-{IMAGES} {IMAGES} 
+<img src="https://github.com/pedrohusky/clean-uninstaller/assets/59580251/5042adad-f717-44d6-b41f-256118130bd9" width="400" height="200"><img src="https://github.com/pedrohusky/clean-uninstaller/assets/59580251/7cad706d-6711-4735-84df-40a3d44726df" width="400" height="300">
 
 ## Features
 
@@ -16,14 +14,19 @@ This really does a clean uninstall. I think even better than the windows "Uninst
 - Removal of registry entries.
 - Deletion of program directories and files.
 - Registry install and uninstall for the program itself.
+![Captura de tela 2023-10-17 154549](https://github.com/pedrohusky/clean-uninstaller/assets/59580251/8742ef83-e6dc-4670-84f8-38333e71e179)
+
 
 ## Prerequisites
 
 To use this tool, you'll need:
-
-- Python 3.6 or higher
-- PyQt6
-- A compatible operating system (Windows, macOS, or Linux)
+- To download the installer from the releases OR editting yourself the code to match anything you like.
+ ```
+  Only if you want to modify the code!!
+  - Python 3.6 or higher
+  - PyQt6
+  - A compatible operating system (Windows, macOS, or Linux)
+ ```
 
 ## Usage
 
@@ -46,8 +49,6 @@ To use this tool, you'll need:
  - To modify the code, you can re-generate those .exes just by running the generate.py withouy any arguments. Ex: python generate.py
  - It will recreate or update the exes inside the dist folder. Three exes are crated: installer, program and uninstaller.
  - Program and uninstaller are packed inside the installer itself that will help handle all the super-easy-three-steps install.
-   
-    {INSTALLER IMAGES} {INSTALLER IMAGES} 
 
 5. After the installer finishes, you can execute the program by two methods:
  - Run the script as a command:
@@ -57,4 +58,4 @@ To use this tool, you'll need:
 
  - Or just right clicking any folder you want to remove or uninstall and selecting "Uninstall".
 
-   {IMAGE SHOWING THE COMMAND}
+   <img src="https://github.com/pedrohusky/clean-uninstaller/assets/59580251/5042adad-f717-44d6-b41f-256118130bd9" width="800" height="400">
