@@ -1,10 +1,10 @@
 import os
 import sys
+from PyQt6.QtWidgets import QMessageBox
 from processes import Processes
 from registry import Registry
 from tools.files import Files
-from tools.ui import UninstallerUI
-
+from ui import UninstallerUI
 
 class Uninstaller:
     def __init__(self, path):
@@ -15,34 +15,60 @@ class Uninstaller:
         self.registry = Registry(self)
         self.processes = Processes()
         self.files = Files(self)
-        self.UI = UninstallerUI(self)
+        # Check if the script is running from the temporary directory
+        program_dir = os.path.dirname(os.path.abspath(sys.executable))
+        self.UI = UninstallerUI(self, os.path.join(program_dir, "icon.ico"))
 
         self.processes_to_terminate = []
 
     def retrieve_information(self):
         program_paths = self.files.find_program_installation_path()
-        uninstaller_exe, filtered_exe, executable_paths = self.files.get_best_matching_exe(program_paths)
+        if len(program_paths) == 1 and program_paths[0].endswith(".lnk"):
+            uninstaller_exe, filtered_exe, executable_paths = None, None, None
+            open_processes = self.processes.find_processes_to_terminate(program_paths, read_only=True)
+        else:
+            uninstaller_exe, filtered_exe, executable_paths = self.files.get_best_matching_exe(program_paths)
+            open_processes = self.processes.find_processes_to_terminate(executable_paths, read_only=True)
         registry_files = self.registry.find_and_remove_registry_entries(read_only=True)
-        open_processes = self.processes.find_processes_to_terminate(executable_paths, read_only=True)
         return program_paths, uninstaller_exe, filtered_exe, executable_paths, registry_files, open_processes
 
     def uninstall(self, program_paths=None, uninstaller_exe=None, filtered_exe=None,
                   executable_paths=None, registry_files=None, open_processes=None):
-        self.processes.find_processes_to_terminate(executable_paths, read_only=False,
-                                                   processes_to_terminate=open_processes)
+        # Are you sure messagebox
+        messagebox = QMessageBox()
+        messagebox.setWindowIcon(self.UI.icon)
+        messagebox.setWindowTitle("Are you sure?")
+        messagebox.setText(f"Are you sure you want to uninstall {self.folder_name}?")
+        messagebox.setStandardButtons(QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No)
+        messagebox.setDefaultButton(QMessageBox.StandardButton.No)
+        messagebox.setIcon(QMessageBox.Icon.Question)
+        result = messagebox.exec()
+        if not result:
+            return
+        if open_processes:
+            self.processes.find_processes_to_terminate(executable_paths, read_only=False,
+                                                       processes_to_terminate=open_processes)
 
-        if uninstaller_exe is not None:
+        if uninstaller_exe:
             self.files.start_program_uninstaller(uninstaller_exe)
-
-        print(f"Uninstalling paths {program_paths}...")
-
-        self.files.remove_files_and_folders(program_paths)
+            # Are you sure messagebox
+            messagebox = QMessageBox()
+            messagebox.setWindowTitle("Please DO NOT CLOSE UNTIL THE UNINSTALL IS COMPLETE?")
+            messagebox.setWindowIcon(self.UI.icon)
+            messagebox.setText(f"Only press YES after the program uninstall finishes.")
+            messagebox.setStandardButtons(QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No)
+            messagebox.setDefaultButton(QMessageBox.StandardButton.No)
+            messagebox.setIcon(QMessageBox.Icon.Warning)
 
         print(f"Uninstalling registry paths {registry_files}...")
 
-        self.registry.find_and_remove_registry_entries(read_only=False, registry_files=registry_files)
+        if registry_files:
+            self.registry.find_and_remove_registry_entries(read_only=False, registry_files=registry_files)
 
-        input("Press enter to continue...")
+        print(f"Uninstalling paths {program_paths}...")
+
+        if program_paths:
+            self.files.remove_files_and_folders(program_paths)
 
         self.UI.close_ui()
 

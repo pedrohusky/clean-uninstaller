@@ -80,7 +80,7 @@ def add_custom_context_menu_command(menu_name, command, icon_path=None):
         print(output)
 
 
-def copy_program_to_installation_directory(path, name="Clean Uninstall.exe"):
+def copy_program_to_installation_directory(path, name="UniClean.exe"):
     try:
         print(f"Copying {name} to the installation directory...")
 
@@ -89,7 +89,7 @@ def copy_program_to_installation_directory(path, name="Clean Uninstall.exe"):
 
         new_dir = os.path.join(MAIN_DIR, name)
 
-        # Copy "Clean Uninstall.exe" to the target directory
+        # Copy "UniClean.exe" to the target directory
         shutil.copy2(path, new_dir)
         print(f"Copied {name} to the installation directory.")
         return new_dir
@@ -100,12 +100,12 @@ def copy_program_to_installation_directory(path, name="Clean Uninstall.exe"):
 
 if __name__ == "__main__":
     menu_name = get_custom_menu_name()  # Replace with the name of the command you want to add
-    program_script = "Clean Uninstall.exe"  # Replace with the name of your Python script
+    program_script = "UniClean.exe"  # Replace with the name of your Python script
     program_script_path = os.path.join(MAIN_EXECUTABLE_PATH, program_script)
     new_folder = copy_program_to_installation_directory(program_script_path)
     icon_path = copy_program_to_installation_directory(os.path.join(MAIN_EXECUTABLE_PATH, "icon.ico"), "icon.ico")
     copy_program_to_installation_directory(os.path.join(MAIN_EXECUTABLE_PATH, "uninstaller.exe"),
-                                           "uninstaller.exe")
+                                           "UniClean-uninstaller.exe")
     command = f'"{new_folder}" "%1"'
 
     add_custom_context_menu_command(menu_name, command, icon_path=icon_path)

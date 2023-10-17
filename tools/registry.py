@@ -60,7 +60,8 @@ class Registry:
         except Exception as e:
             print(f"Error while editing the context menu item: {e}")
 
-    def backup_registry(self):
+    @staticmethod
+    def backup_registry():
         key_path = r"HKCR\*\shell\pintohomefile"
         backup_path = os.path.join(os.environ['ProgramFiles'], 'Desinstalar Tudo', 'registry_backup.reg')
         try:
@@ -81,7 +82,7 @@ class Registry:
                     try:
                         sub_sub_key_name = winreg.EnumKey(sub_key, 0)
                         self._delete_key(sub_key, sub_sub_key_name)
-                    except:
+                    except OSError:
                         sub_sub_key_name = winreg.EnumKey(sub_key, 1)
                         self._delete_key(sub_key, sub_sub_key_name)
                 except OSError:
@@ -95,23 +96,24 @@ class Registry:
             try:
                 open_key = winreg.OpenKey(root, sub, 0, winreg.KEY_ALL_ACCESS)
                 print(f"Opened registry key: {self.hkey_names[root]}\\{sub}")
+
                 num, _, _ = winreg.QueryInfoKey(open_key)
                 print(f"Found {num} sub_keys under {self.hkey_names[root]}\\{sub}")
+
                 for _ in range(num):
                     child = winreg.EnumKey(open_key, 0)
+
                     if should_delete:
                         print(f"Deleting registry key: {self.hkey_names[root]}\\{sub}\\{child}")
                         self._delete_key(open_key, child)
-                    else:
-                        print(f"Would be deleting registry key: {self.hkey_names[root]}\\{sub}\\{child}")
+
                     registry_keys.append(f"{self.hkey_names[root]}\\{sub}\\{child}")
 
                 try:
                     if should_delete:
                         print(f"Deleted registry key: {self.hkey_names[root]}\\{sub}")
                         winreg.DeleteKey(open_key, '')
-                    else:
-                        print(f"Would be deleted registry key: {self.hkey_names[root]}\\{sub}")
+
                     registry_keys.append(f"{self.hkey_names[root]}\\{sub}")
                 except WindowsError:
                     continue

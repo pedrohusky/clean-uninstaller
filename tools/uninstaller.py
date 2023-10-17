@@ -1,4 +1,3 @@
-import atexit
 import ctypes
 import locale
 import os
@@ -6,8 +5,8 @@ import shutil
 import subprocess
 import sys
 import tempfile
-import time
 import winreg as reg
+from tkinter import messagebox
 
 from tools.registry import Registry
 
@@ -31,6 +30,8 @@ language_translations = {
     # Add more languages and translations as needed
 }
 
+app_name = "UniClean"
+
 
 def is_admin():
     try:
@@ -38,13 +39,22 @@ def is_admin():
     except:
         return False
 
+def remove_registry_uninstall(menu_name):
+    try:
+        if is_admin():
+            uninstall_key = f"Software\\Microsoft\\Windows\\CurrentVersion\\Uninstall\\{menu_name}"
+            Registry(None).delete_sub_key(reg.HKEY_LOCAL_MACHINE, [uninstall_key], should_delete=True)
+    except Exception as e:
+        output = "Error: " + str(e)
+        print(output)
 
-def remove_custom_context_menu_command(menu_name):
+
+def remove_custom_context_menu_command(menu_name, program_dir):
     try:
         if is_admin():
             key = r'Folder\shell\{}'.format(menu_name)
             Registry(None).delete_sub_key(reg.HKEY_CLASSES_ROOT, [key], should_delete=True)
-            backup_path = os.path.join(os.environ['ProgramFiles'], get_custom_menu_name(), 'registry_backup.reg')
+            backup_path = os.path.join(program_dir, 'registry_backup.reg')
 
             if os.path.exists(backup_path):
                 try:
@@ -54,9 +64,6 @@ def remove_custom_context_menu_command(menu_name):
 
                 except Exception as e:
                     print(f"Error while restoring the registry key from the backup: {e}")
-
-        else:
-            ctypes.windll.shell32.ShellExecuteW(None, "runas", sys.executable, " ".join(sys.argv), None, 1)
 
     except Exception as e:
         output = "Error: " + str(e)
@@ -94,17 +101,16 @@ def uninstall_program(program_dir):
             print(f"Removed program directory and all its contents: {program_dir}")
             return uninstaller_path
 
-        # Additional cleanup steps, e.g., removing shortcuts, configuration files, etc.
-
     except Exception as e:
         print("Error Uninstalling:", e)
+
 
 def generate_temp_path_in_appdata(file_name):
     # Get the path to the user's %APPDATA% directory
     appdata_dir = os.path.expanduser(os.path.join("~", "AppData", "Roaming"))
 
     # Create a subdirectory within %APPDATA% for your temporary file
-    temp_dir = os.path.join(appdata_dir, "YourAppName")
+    temp_dir = os.path.join(appdata_dir, app_name)
 
     # Ensure the directory exists or create it if it doesn't
     os.makedirs(temp_dir, exist_ok=True)
@@ -114,15 +120,13 @@ def generate_temp_path_in_appdata(file_name):
 
     return temporary_path, temp_dir
 
-def schedule_deletion(program_directory):
 
+def schedule_deletion(program_directory):
     # Schedule the temporary script for deletion upon system restart
     deletion_command = (
         f'timeout /t 1 && del /f /q "{program_directory}" && timeout /t 1 && '
         f'rmdir /s /q "{program_directory}"'
     )
-    print(deletion_command)
-    input("Press Enter to continue...")
 
     # Create a batch file with the deletion command
     batch_file = os.path.join(program_directory, "deletion_script.bat")
@@ -131,9 +135,11 @@ def schedule_deletion(program_directory):
 
     subprocess.Popen(['cmd', '/c', batch_file], shell=True, creationflags=subprocess.CREATE_NO_WINDOW)
 
+
 def copy_self_to_temp():
     # Get the script's current directory and filename
-    program_dir = os.path.join(os.environ['ProgramFiles'], get_custom_menu_name(), 'uninstaller.exe')  # Replace with the program installation directory
+    program_dir = os.path.join(os.environ['ProgramFiles'], get_custom_menu_name(),
+                               'uninstaller.exe')  # Replace with the program installation directory
     script_filename = os.path.basename(program_dir)
 
     # Generate a temporary directory for the script
@@ -145,12 +151,20 @@ def copy_self_to_temp():
     shutil.copyfile(program_dir, temp_script_path)
 
     return temp_script_path
+
+
 if __name__ == "__main__":
     # Check if the script is running from the temporary directory
-    menu_name = get_custom_menu_name()  # Replace with the name of the context menu command
-    program_dir = os.path.join(os.environ['ProgramFiles'],
-                               get_custom_menu_name())  # Replace with the program installation directory
+    program_dir = os.path.dirname(os.path.abspath(sys.executable))
 
-    remove_custom_context_menu_command(menu_name)
-    uninstaller_path = uninstall_program(program_dir)
-    schedule_deletion(program_dir)
+    # Now list the program_dir files
+    files = os.listdir(program_dir)
+    required_files = ['icon.ico', 'UniClean-uninstaller.exe']
+
+    if all(file in files for file in required_files):
+        remove_custom_context_menu_command(app_name, program_dir)
+        remove_registry_uninstall(app_name)
+        uninstaller_path = uninstall_program(program_dir)
+        messagebox.showinfo("Uninstaller", f"{app_name} has been uninstalled.",
+                            icon=messagebox.INFO)
+        schedule_deletion(program_dir)
