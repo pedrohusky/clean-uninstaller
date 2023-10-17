@@ -141,7 +141,7 @@ class Files:
             return unique_paths
 
         # Return None if no program installations are found
-        return []
+        return [self.uninstaller.path] if os.path.exists(self.uninstaller.path) else []
 
     def get_best_matching_exe(self, paths, main_folder_names=['Application', 'Program']):
         best_uninstaller = None
