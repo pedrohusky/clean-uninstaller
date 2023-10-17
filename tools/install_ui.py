@@ -189,13 +189,13 @@ class InstallerUI(QMainWindow):
         self.target_dir_label = None
         self.selected_path = ''
 
-        self.setWindowTitle("Installer")
+        self.setWindowTitle("UniClean Installer")
         self.setGeometry(100, 100, 300, 200)
 
         self.central_widget = QWidget()
         self.setCentralWidget(self.central_widget)
-        print(icon)
-        self.setWindowIcon(QIcon(icon))
+        self.icon = QIcon(icon)
+        self.setWindowIcon(self.icon)
 
         self.layout = QVBoxLayout()
 
@@ -241,7 +241,13 @@ class InstallerUI(QMainWindow):
 
     def setup_welcome_screen(self):
         layout = QVBoxLayout()
-        label = QLabel("Welcome to the Installer!")
+        image = QLabel()
+        image.setPixmap(self.icon.pixmap(128, 128))
+        layout.addWidget(image, alignment=Qt.AlignmentFlag.AlignCenter)
+        label = QLabel("Welcome to the UniClean installer!\n"
+                       "We'll help you trough this\n"
+                       "super-easy-process of three steps!\n"
+                       "To start, click Next.")
         layout.addWidget(label, alignment=Qt.AlignmentFlag.AlignCenter)
         next_button = QPushButton("Next")
         next_button.clicked.connect(self.next_screen)

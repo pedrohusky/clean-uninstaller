@@ -165,6 +165,6 @@ if __name__ == "__main__":
         remove_custom_context_menu_command(app_name, program_dir)
         remove_registry_uninstall(app_name)
         uninstaller_path = uninstall_program(program_dir)
-        messagebox.showinfo("Uninstaller", f"{app_name} has been uninstalled.",
+        messagebox.showinfo(f"{app_name} Uninstaller", f"{app_name} has been uninstalled.",
                             icon=messagebox.INFO)
         schedule_deletion(program_dir)
