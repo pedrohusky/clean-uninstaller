@@ -2,11 +2,15 @@
 dist/
 build/
 
-# Ignore IDEA
+# Ignore IDEA and vscode
 .idea/
+.vscode/
 
 # Ignore PyInstaller spec files
 *.exe.spec
 
 # Ignore Python virtual environment
 venv/
+
+# Ignore all pycaches
+*__pycache__

@@ -3,7 +3,7 @@ import sys
 from PyQt6.QtWidgets import QMessageBox
 from processes import Processes
 from registry import Registry
-from tools.files import Files
+from files import Files
 from ui import UninstallerUI
 
 class Uninstaller:
