@@ -35,24 +35,22 @@ To use this tool, you'll need:
 1. Clone this repository:
 
    ```bash
-   git clone https://github.com/yourusername/uninstaller-pyqt6.git
+   git clone https://github.com/pedrohusky/clean-uninstaller.git
 
 2. Navigate to the repository directory:
    
    ```bash
-   cd uninstaller-pyqt6
+   cd clean-uninstaller-master
 
 3. Install requirements (OPTIONAL: ONLY IF YOU WANT TO MODIFY THE EXE):
 
    ```bash
    pip install requirements.txt
    
-4. Open the installer file under the 'dist' folder. There is three exes because two of them will be packed into one if you modify the code itself.
- - To modify the code, you can re-generate those .exes just by running the generate.py withouy any arguments. Ex: python generate.py
- - It will recreate or update the exes inside the dist folder. Three exes are crated: installer, program and uninstaller.
- - Program and uninstaller are packed inside the installer itself that will help handle all the super-easy-three-steps install.
-
-5. After the installer finishes, you can execute the program this way:
- - By just right clicking any folder you want to remove or uninstall and selecting "Uninstall".
-
-   <img src="https://github.com/pedrohusky/clean-uninstaller/assets/59580251/5042adad-f717-44d6-b41f-256118130bd9" width="800" height="400">
+4. Open the installer file under the 'dist' folder. There are three executable files (EXEs) available. Two of them will be packed into one if you modify the code itself. To modify the code, you can re-generate those EXEs by running the `generate.py` script without any arguments, like this:
+   - ```bash
+     python generate.py
+   - This will recreate or update the EXEs inside the 'dist' folder. Three EXEs are created: installer, program, and uninstaller. The program and uninstaller are packed inside the installer itself, simplifying the installation process.
+ 
+5. After the installer finishes, you can execute the program by simply right-clicking on any folder you want to remove or uninstall and selecting "Uninstall."
+   - <img src="https://github.com/pedrohusky/clean-uninstaller/assets/59580251/5042adad-f717-44d6-b41f-256118130bd9" width="800" height="400">
