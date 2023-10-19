@@ -1,5 +1,7 @@
 import os
 from functools import partial
+
+import qdarktheme
 from PyQt6.QtCore import Qt, QFileInfo
 from PyQt6.QtGui import QIcon
 from PyQt6.QtWidgets import QApplication, QMainWindow, QLabel, QCheckBox, QPushButton, QVBoxLayout, QWidget, \
@@ -46,7 +48,7 @@ class UninstallerUI:
                 self.selected_processes.append(item)
             elif len(self.selected_processes) > 0:
                 self.selected_processes.remove(item)
-        print(self.selected_paths, self.selected_executables, self.selected_registries, self.selected_processes)
+        #print(self.selected_paths, self.selected_executables, self.selected_registries, self.selected_processes)
         if self.uninstall_button:
             self.uninstall_button.setEnabled(len(self.selected_paths) > 0 or
                                              len(self.selected_executables) > 0 or
@@ -102,30 +104,7 @@ class UninstallerUI:
         self.file_icon_provider = QFileIconProvider()  # Create an icon provider
         main_window = QMainWindow()
         self.icon = QIcon(self.icon)
-        dark_theme_stylesheet = """
-            QLabel {
-                color: #FFFFFF;  /* Text color for QLabel */
-                background-color: #333333;  /* Background color for QLabel */
-                border-radius: 5px;  /* Rounded corners */
-            }
-            QCheckBox {
-                color: #FFFFFF;  /* Text color for QCheckBox */
-                background-color: #555555;  /* Background color for QCheckBox */
-                border-radius: 5px;  /* Rounded corners */
-            }
-            QPushButton {
-                color: #FFFFFF;  /* Text color for QPushButton */
-                background-color: #555555;  /* Background color for QPushButton */
-                border: 1px solid #777777;  /* Border for QPushButton */
-                border-radius: 5px;  /* Rounded corners */
-            }
-            QWidget {
-                background-color: #333333;  /* Background color for QWidget */
-                border-radius: 5px;  /* Rounded corners */
-            }
-        """
-
-        # main_window.setStyleSheet(dark_theme_stylesheet)
+        qdarktheme.setup_theme("auto")
         self.main_window = main_window
         main_window.setWindowIcon(self.icon)
         main_window.setWindowTitle(f"Uninstall {self.uninstaller.folder_name}?")

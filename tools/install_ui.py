@@ -3,6 +3,8 @@ import locale
 import os
 import shutil
 import sys
+
+import qdarktheme
 from PyQt6.QtCore import Qt, QThread, pyqtSignal
 from PyQt6.QtGui import QIcon
 from PyQt6.QtWidgets import QApplication, QMainWindow, QWidget, QVBoxLayout, QHBoxLayout, QPushButton, QLabel, \
@@ -191,6 +193,8 @@ class InstallerUI(QMainWindow):
 
         self.setWindowTitle("UniClean Installer")
         self.setGeometry(100, 100, 300, 200)
+
+        qdarktheme.setup_theme("auto")
 
         self.central_widget = QWidget()
         self.setCentralWidget(self.central_widget)

@@ -29,7 +29,12 @@ class Uninstaller:
         else:
             uninstaller_exe, filtered_exe, executable_paths = self.files.get_best_matching_exe(program_paths)
             open_processes = self.processes.find_processes_to_terminate(executable_paths, read_only=True)
-        registry_files = self.registry.find_and_remove_registry_entries(read_only=True)
+
+        if os.name == 'posix':  # For macOS and Linux
+            registry_files = None
+        elif os.name == 'nt':  # For Windows
+            registry_files = self.registry.find_and_remove_registry_entries(read_only=True)
+
         return program_paths, uninstaller_exe, filtered_exe, executable_paths, registry_files, open_processes
 
     def uninstall(self, program_paths=None, uninstaller_exe=None, filtered_exe=None,
@@ -49,7 +54,7 @@ class Uninstaller:
             self.processes.find_processes_to_terminate(executable_paths, read_only=False,
                                                        processes_to_terminate=open_processes)
 
-        if uninstaller_exe:
+        if uninstaller_exe and os.name == 'nt':
             self.files.start_program_uninstaller(uninstaller_exe)
             # Are you sure messagebox
             messagebox = QMessageBox()

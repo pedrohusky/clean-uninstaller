@@ -165,7 +165,6 @@ class Registry:
                     registry_keys.extend(self.delete_sub_key(root[0], sub_keys, should_delete=not read_only))
 
             if read_only:
-                print(registry_keys)
                 return registry_keys
 
             print(f"Deleted registry keys: {registry_keys}")

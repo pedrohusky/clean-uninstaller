@@ -60,8 +60,25 @@ def generate_executable(script_name, exe_name):
 
 if __name__ == "__main__":
     script_location = os.path.abspath(__file__)
+
+    platform = sys.platform
+
+    if platform == "linux" or platform == "darwin":
+        path_separator = "/"
+        exe_extension = ""  # No extension needed for Linux and macOS
+    else:
+        path_separator = "\\"
+        exe_extension = ".exe"  # Add .exe extension for Windows
+
+
     # The script_name is the name of the script you want to convert to an EXE.
     # In this case, we are using "installer.py".
-    generate_executable("tools\\clean_uninstall.py", exe_name="UniClean.exe")  # Pass the desired executable name
-    generate_executable("tools\\uninstaller.py", exe_name="uninstaller.exe")  # Pass the desired executable name
-    generate_executable("tools\\install_ui.py", exe_name="Clean Uninstall v1.0-installer.exe")  # Pass the desired executable name
+    generate_executable(f"tools{path_separator}clean_uninstall.py",
+                        exe_name=f"UniClean{exe_extension}")  # Pass the desired executable name
+
+    # See if platform is windows
+    if platform == "win32":
+        generate_executable(f"tools{path_separator}uninstaller.py",
+                            exe_name=f"uninstaller{exe_extension}")  # Pass the desired executable name
+        generate_executable(f"tools{path_separator}install_ui.py",
+                            exe_name=f"UniClean-installer-v1.0{exe_extension}")  # Pass the desired executable name

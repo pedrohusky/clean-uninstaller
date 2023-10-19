@@ -2,6 +2,7 @@ import os
 import shutil
 import subprocess
 import psutil
+import concurrent.futures
 
 
 class Files:
@@ -102,35 +103,31 @@ class Files:
         print(f"Step 2: Found program executable: {filtered_exe}, program name: {self.uninstaller.program_name}")
 
         # Specify common program files directories to search
-        program_files_paths = ["C:\\Program Files", "C:\\Program Files (x86)", "C:\\ProgramData",
-                               "C:\\ProgramData\\Microsoft\\Windows\\Start Menu\\Programs",
-                               "C:\\ProgramData\\Microsoft\\Windows\\Start Menu\\Programs\\Startup"]
-        print(f"Step 3: Searching in program files paths: {program_files_paths}")
+        common_program_directories = []
 
-        for program_files_path in program_files_paths:
-            for entry in os.scandir(program_files_path):
-                if entry.is_dir():
-                    dir_name = entry.name
-                    if self.uninstaller.program_name in dir_name or self.uninstaller.folder_name in dir_name:
-                        # Check if the new path is not a sub path of any existing path in paths
-                        dir_path = entry.path
-                        is_sub_path = any(dir_path.startswith(existing_path) for existing_path in paths)
+        if os.name == 'posix':  # For macOS and Linux
+            common_program_directories.extend(["/usr/local", "/opt", os.path.expanduser("~/.local/share")])
+        elif os.name == 'nt':  # For Windows
+            common_program_directories.extend([
+                os.path.join(os.environ['ProgramFiles']),
+                os.path.join(os.environ['ProgramFiles(x86)']),
+                os.path.join(os.environ['ProgramData'], "Microsoft", "Windows", "Start Menu", "Programs"),
+                os.path.join(os.environ['ProgramData'], "Microsoft", "Windows", "Start Menu", "Programs", "Startup"),
+                os.path.expanduser("~\\AppData\\Local"),
+                os.path.expanduser("~\\AppData\\Roaming"),
+            ])
 
-                        if not is_sub_path:
-                            paths.add(dir_path)
-                            print(f"Step 4: Found program installation path: {dir_path}")
-                        else:
-                            print(f"Would be added to an existing path: {dir_path}")
+        print(f"Step 3: Searching in program files paths: {common_program_directories}")
 
-                elif entry.is_file() and entry.name.lower().endswith('.lnk'):
+        # Use concurrent.futures for parallel directory scanning
+        with concurrent.futures.ThreadPoolExecutor() as executor:
+            futures = []
 
-                    # Check if the file is a shortcut and contains the program name
-                    if (self.uninstaller.program_name in entry.name or
-                            self.uninstaller.folder_name in entry.name):
-                        shortcut_path = entry.path
+            for program_files_path in common_program_directories:
+                futures.append(executor.submit(self.scan_directory, program_files_path, paths))
 
-                        paths.add(shortcut_path)
-                        print(f"Step 4: Found program installation path: {shortcut_path}")
+            # Wait for all tasks to complete
+            concurrent.futures.wait(futures)
 
         # Convert the set of paths to a list
         unique_paths = list(paths)
@@ -143,6 +140,31 @@ class Files:
         # Return None if no program installations are found
         return [self.uninstaller.path] if os.path.exists(self.uninstaller.path) else []
 
+    def scan_directory(self, directory, paths):
+        for entry in os.scandir(directory):
+            if entry.is_dir():
+                dir_name = entry.name
+                if (self.uninstaller.program_name.lower() in dir_name.lower() or
+                        self.uninstaller.folder_name.lower() in dir_name.lower()):
+                    # Check if the new path is not a sub path of any existing path in paths
+                    dir_path = entry.path
+                    is_sub_path = any(dir_path.startswith(existing_path) for existing_path in paths)
+
+                    if not is_sub_path:
+                        paths.add(dir_path)
+                        print(f"Found program installation path: {dir_path}")
+                    else:
+                        print(f"Would be added to an existing path: {dir_path}")
+
+            elif entry.is_file() and entry.name.lower().endswith('.lnk'):
+                # Check if the file is a shortcut and contains the program name
+                if (self.uninstaller.program_name in entry.name or
+                        self.uninstaller.folder_name in entry.name):
+                    shortcut_path = entry.path
+
+                    paths.add(shortcut_path)
+                    print(f"Found program installation path: {shortcut_path}")
+
     def get_best_matching_exe(self, paths, main_folder_names=['Application', 'Program']):
         best_uninstaller = None
         best_remaining_executable = None
@@ -150,55 +172,65 @@ class Files:
         best_uninstaller_score = 0
         best_remaining_executable_score = 0
 
-        for path in paths:
-            detected_files = []
+        detected_files = []
 
-            for root, dirs, files in os.walk(path):
-                for filename in files:
-                    if filename.lower().endswith('.exe'):
-                        exe_path = os.path.join(root, filename)
-                        exe_base_name = os.path.basename(exe_path).lower()
+        def score_file(exe_path):
+            nonlocal best_uninstaller, best_uninstaller_score
+            nonlocal best_remaining_executable, best_remaining_executable_score
 
-                        # Initialize a score for each executable
-                        score = 0
+            exe_base_name = os.path.basename(exe_path).lower()
 
-                        # Check for "32" or "64" in the base name
-                        if '32' in exe_base_name or '64' in exe_base_name:
-                            score += 1 / 32 if '32' in exe_base_name else 1 / 64
+            # Initialize a score for each executable
+            score = 0
 
-                        # Consider file size in scoring
-                        file_size = os.path.getsize(exe_path)
-                        if file_size > 0:
-                            score += file_size / (file_size * 0.5)
+            # Check for "32" or "64" in the base name
+            if '32' in exe_base_name or '64' in exe_base_name:
+                score += 1 / 32 if '32' in exe_base_name else 1 / 64
 
-                        # Assign a higher score to shallower depths
-                        depth = len(os.path.relpath(exe_path, path).split(os.sep))
-                        score += 1 / depth
+            # Consider file size in scoring
+            file_size = os.path.getsize(exe_path)
+            if file_size > 0:
+                score += file_size / (file_size / 3)
 
-                        # Check if it's an uninstaller
-                        if 'unins' in exe_base_name:
-                            if best_uninstaller is None or score > best_uninstaller_score:
-                                best_uninstaller = exe_path
-                                best_uninstaller_score = score
-                        else:
-                            # Check if the executable is inside a folder with a main_folder_name
-                            folder_name = os.path.basename(os.path.dirname(exe_path))
-                            if any(name.lower() in folder_name.lower() for name in main_folder_names):
-                                if best_remaining_executable is None or score > best_remaining_executable_score:
-                                    best_remaining_executable = exe_path
-                                    best_remaining_executable_score = score
+            # Assign a higher score to shallower depths
+            depth = len(exe_path.split(os.sep))
+            score += 1 / (depth + 1)  # Now, deeper paths will receive lower scores
 
-                        detected_files.append((exe_path, score))
+            # Check if it's an uninstaller
+            if 'unins' in exe_base_name:
+                if best_uninstaller is None or score > best_uninstaller_score:
+                    best_uninstaller = exe_path
+                    best_uninstaller_score = score
+            else:
+                # Check if the executable is inside a folder with a main_folder_name
+                folder_name = os.path.basename(os.path.dirname(exe_path))
+                if any(name.lower() in folder_name.lower() for name in main_folder_names):
+                    if best_remaining_executable is None or score > best_remaining_executable_score:
+                        best_remaining_executable = exe_path
+                        best_remaining_executable_score = score
 
-            # Sort the detected files by score
-            detected_files.sort(key=lambda x: x[1], reverse=True)
+            detected_files.append((exe_path, score))
 
-            # Update the best remaining executable
-            if detected_files:
-                best_remaining_executable = detected_files[0][0]
+        with concurrent.futures.ThreadPoolExecutor() as executor:
+            for path in paths:
+                for root, dirs, files in os.walk(path):
+                    for filename in files:
+                        if filename.lower().endswith('.exe'):
+                            exe_path = os.path.join(root, filename)
+                            executor.submit(score_file, exe_path)
 
+        # Sort the detected files by score
+        detected_files.sort(key=lambda x: x[1], reverse=True)
+
+        # Update the best remaining executable
+        if detected_files:
+            best_remaining_executable = detected_files[0][0]
+
+        if len(detected_files) > 0:
             # Add all detected executable files (excluding uninstallers) to the set
             detected_executables.update(exe[0] for exe in detected_files)
+
+        print(detected_files)
 
         try:
             self.uninstaller.program_name = (os.path.basename(best_remaining_executable)
