@@ -3,7 +3,7 @@
 
 An uninstaller tool built with PyQt6 to improve the uninstalling of programs and making it as easy as copy a file.
 Adds a new context menu under the Right click in any folder.
-This really does a clean uninstall. I think even better than the windows "Uninstall Program". Currently, it works on windows. WIP other platforms.
+This really does a clean uninstall. I guess even better than the windows "Uninstall Program". Currently, it works on windows. WIP other platforms.
 
 
 <img src="https://github.com/pedrohusky/clean-uninstaller/assets/59580251/7cad706d-6711-4735-84df-40a3d44726df" width="500" height="300">
@@ -32,7 +32,7 @@ To use this tool, you'll need:
 
 ## Usage
 
-1. Clone this repository:
+1. Clone this repository OR just download the release [here](https://github.com/pedrohusky/clean-uninstaller/releases/tag/v1.0):
 
    ```bash
    git clone https://github.com/pedrohusky/clean-uninstaller.git
