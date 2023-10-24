@@ -21,31 +21,40 @@ class Files:
         system_info = {
             "total_space": disk_usage.total,
             "free_space_before": disk_usage.free,
-            "free_space_after": disk_usage.free + space_freed_up  # This is a placeholder value, replace it
+            "free_space_after": disk_usage.free
+            + space_freed_up,  # This is a placeholder value, replace it
         }
 
-        sizes = ['GB', 'MB', 'KB']
+        sizes = ["GB", "MB", "KB"]
         size_converted = 0
-        unit = ''
+        unit = ""
         for size in sizes:
-            size_converted = float("{:.2f}".format(self.convert_bytes(system_info['free_space_before'], size)))
+            size_converted = float(
+                "{:.2f}".format(
+                    self.convert_bytes(system_info["free_space_before"], size)
+                )
+            )
             if size_converted > 1:
                 unit = size
                 break
 
-        system_info['free_space_before_converted'] = size_converted
-        system_info['free_space_before_unit'] = unit
+        system_info["free_space_before_converted"] = size_converted
+        system_info["free_space_before_unit"] = unit
 
         # Now, calculate the unit for free_space_after
-        unit = ''
+        unit = ""
         for size in sizes:
-            size_converted = float("{:.2f}".format(self.convert_bytes(system_info['free_space_after'], size)))
+            size_converted = float(
+                "{:.2f}".format(
+                    self.convert_bytes(system_info["free_space_after"], size)
+                )
+            )
             if size_converted > 1:
                 unit = size
                 break
 
-        system_info['free_space_after_converted'] = size_converted
-        system_info['free_space_after_unit'] = unit
+        system_info["free_space_after_converted"] = size_converted
+        system_info["free_space_after_unit"] = unit
 
         return system_info
 
@@ -63,23 +72,25 @@ class Files:
                     file_path = os.path.join(dirpath, filename)
                     total_size += os.path.getsize(file_path)
 
-        sizes = ['GB', 'MB', 'KB']
+        sizes = ["GB", "MB", "KB"]
         size_converted = 0
-        unit = ''
+        unit = ""
         for size in sizes:
-            size_converted = float("{:.2f}".format(self.convert_bytes(total_size, size)))
+            size_converted = float(
+                "{:.2f}".format(self.convert_bytes(total_size, size))
+            )
             if size_converted > 1:
                 unit = size
                 break
 
         return {
             "size": {
-                'total_size_converted': size_converted,
-                'total_size': total_size,
-                'unit': unit
+                "total_size_converted": size_converted,
+                "total_size": total_size,
+                "unit": unit,
             },
             "file_count": file_count,
-            "dir_count": dir_count
+            "dir_count": dir_count,
         }
 
     @staticmethod
@@ -100,22 +111,41 @@ class Files:
 
         # Find the uninstaller and other executable paths
         _, filtered_exe, _ = self.get_best_matching_exe([self.uninstaller.path])
-        print(f"Step 2: Found program executable: {filtered_exe}, program name: {self.uninstaller.program_name}")
+        print(
+            f"Step 2: Found program executable: {filtered_exe}, program name: {self.uninstaller.program_name}"
+        )
 
         # Specify common program files directories to search
         common_program_directories = []
 
-        if os.name == 'posix':  # For macOS and Linux
-            common_program_directories.extend(["/usr/local", "/opt", os.path.expanduser("~/.local/share")])
-        elif os.name == 'nt':  # For Windows
-            common_program_directories.extend([
-                os.path.join(os.environ['ProgramFiles']),
-                os.path.join(os.environ['ProgramFiles(x86)']),
-                os.path.join(os.environ['ProgramData'], "Microsoft", "Windows", "Start Menu", "Programs"),
-                os.path.join(os.environ['ProgramData'], "Microsoft", "Windows", "Start Menu", "Programs", "Startup"),
-                os.path.expanduser("~\\AppData\\Local"),
-                os.path.expanduser("~\\AppData\\Roaming"),
-            ])
+        if os.name == "posix":  # For macOS and Linux
+            common_program_directories.extend(
+                ["/usr/local", "/opt", os.path.expanduser("~/.local/share")]
+            )
+        elif os.name == "nt":  # For Windows
+            common_program_directories.extend(
+                [
+                    os.path.join(os.environ["ProgramFiles"]),
+                    os.path.join(os.environ["ProgramFiles(x86)"]),
+                    os.path.join(
+                        os.environ["ProgramData"],
+                        "Microsoft",
+                        "Windows",
+                        "Start Menu",
+                        "Programs",
+                    ),
+                    os.path.join(
+                        os.environ["ProgramData"],
+                        "Microsoft",
+                        "Windows",
+                        "Start Menu",
+                        "Programs",
+                        "Startup",
+                    ),
+                    os.path.expanduser("~\\AppData\\Local"),
+                    os.path.expanduser("~\\AppData\\Roaming"),
+                ]
+            )
 
         print(f"Step 3: Searching in program files paths: {common_program_directories}")
 
@@ -124,7 +154,9 @@ class Files:
             futures = []
 
             for program_files_path in common_program_directories:
-                futures.append(executor.submit(self.scan_directory, program_files_path, paths))
+                futures.append(
+                    executor.submit(self.scan_directory, program_files_path, paths)
+                )
 
             # Wait for all tasks to complete
             concurrent.futures.wait(futures)
@@ -144,11 +176,15 @@ class Files:
         for entry in os.scandir(directory):
             if entry.is_dir():
                 dir_name = entry.name
-                if (self.uninstaller.program_name.lower() in dir_name.lower() or
-                        self.uninstaller.folder_name.lower() in dir_name.lower()):
+                if (
+                    self.uninstaller.program_name.lower() in dir_name.lower()
+                    or self.uninstaller.folder_name.lower() in dir_name.lower()
+                ):
                     # Check if the new path is not a sub path of any existing path in paths
                     dir_path = entry.path
-                    is_sub_path = any(dir_path.startswith(existing_path) for existing_path in paths)
+                    is_sub_path = any(
+                        dir_path.startswith(existing_path) for existing_path in paths
+                    )
 
                     if not is_sub_path:
                         paths.add(dir_path)
@@ -156,16 +192,20 @@ class Files:
                     else:
                         print(f"Would be added to an existing path: {dir_path}")
 
-            elif entry.is_file() and entry.name.lower().endswith('.lnk'):
+            elif entry.is_file() and entry.name.lower().endswith(".lnk"):
                 # Check if the file is a shortcut and contains the program name
-                if (self.uninstaller.program_name in entry.name or
-                        self.uninstaller.folder_name in entry.name):
+                if (
+                    self.uninstaller.program_name in entry.name
+                    or self.uninstaller.folder_name in entry.name
+                ):
                     shortcut_path = entry.path
 
                     paths.add(shortcut_path)
                     print(f"Found program installation path: {shortcut_path}")
 
-    def get_best_matching_exe(self, paths, main_folder_names=['Application', 'Program']):
+    def get_best_matching_exe(
+        self, paths, main_folder_names=["Application", "Program"]
+    ):
         best_uninstaller = None
         best_remaining_executable = None
         detected_executables = set()
@@ -184,8 +224,8 @@ class Files:
             score = 0
 
             # Check for "32" or "64" in the base name
-            if '32' in exe_base_name or '64' in exe_base_name:
-                score += 1 / 32 if '32' in exe_base_name else 1 / 64
+            if "32" in exe_base_name or "64" in exe_base_name:
+                score += 1 / 32 if "32" in exe_base_name else 1 / 64
 
             # Consider file size in scoring
             file_size = os.path.getsize(exe_path)
@@ -197,15 +237,20 @@ class Files:
             score += 1 / (depth + 1)  # Now, deeper paths will receive lower scores
 
             # Check if it's an uninstaller
-            if 'unins' in exe_base_name:
+            if "unins" in exe_base_name:
                 if best_uninstaller is None or score > best_uninstaller_score:
                     best_uninstaller = exe_path
                     best_uninstaller_score = score
             else:
                 # Check if the executable is inside a folder with a main_folder_name
                 folder_name = os.path.basename(os.path.dirname(exe_path))
-                if any(name.lower() in folder_name.lower() for name in main_folder_names):
-                    if best_remaining_executable is None or score > best_remaining_executable_score:
+                if any(
+                    name.lower() in folder_name.lower() for name in main_folder_names
+                ):
+                    if (
+                        best_remaining_executable is None
+                        or score > best_remaining_executable_score
+                    ):
                         best_remaining_executable = exe_path
                         best_remaining_executable_score = score
 
@@ -215,7 +260,7 @@ class Files:
             for path in paths:
                 for root, dirs, files in os.walk(path):
                     for filename in files:
-                        if filename.lower().endswith('.exe'):
+                        if filename.lower().endswith(".exe"):
                             exe_path = os.path.join(root, filename)
                             executor.submit(score_file, exe_path)
 
@@ -233,10 +278,12 @@ class Files:
         print(detected_files)
 
         try:
-            self.uninstaller.program_name = (os.path.basename(best_remaining_executable)
-                                             .replace('.exe', '')
-                                             .replace('64', '')
-                                             .replace('32', ''))
+            self.uninstaller.program_name = (
+                os.path.basename(best_remaining_executable)
+                .replace(".exe", "")
+                .replace("64", "")
+                .replace("32", "")
+            )
         except TypeError:
             self.uninstaller.program_name = self.uninstaller.folder_name
 

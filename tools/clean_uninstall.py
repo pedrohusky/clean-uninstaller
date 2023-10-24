@@ -6,6 +6,7 @@ from registry import Registry
 from files import Files
 from ui import UninstallerUI
 
+
 class Uninstaller:
     def __init__(self, path):
         super().__init__()
@@ -25,50 +26,83 @@ class Uninstaller:
         program_paths = self.files.find_program_installation_path()
         if len(program_paths) == 1 and program_paths[0].endswith(".lnk"):
             uninstaller_exe, filtered_exe, executable_paths = None, None, None
-            open_processes = self.processes.find_processes_to_terminate(program_paths, read_only=True)
+            open_processes = self.processes.find_processes_to_terminate(
+                program_paths, read_only=True
+            )
         else:
-            uninstaller_exe, filtered_exe, executable_paths = self.files.get_best_matching_exe(program_paths)
-            open_processes = self.processes.find_processes_to_terminate(executable_paths, read_only=True)
+            (
+                uninstaller_exe,
+                filtered_exe,
+                executable_paths,
+            ) = self.files.get_best_matching_exe(program_paths)
+            open_processes = self.processes.find_processes_to_terminate(
+                executable_paths, read_only=True
+            )
 
-        if os.name == 'posix':  # For macOS and Linux
+        if os.name == "posix":  # For macOS and Linux
             registry_files = None
-        elif os.name == 'nt':  # For Windows
-            registry_files = self.registry.find_and_remove_registry_entries(read_only=True)
+        elif os.name == "nt":  # For Windows
+            registry_files = self.registry.find_and_remove_registry_entries(
+                read_only=True
+            )
 
-        return program_paths, uninstaller_exe, filtered_exe, executable_paths, registry_files, open_processes
+        return (
+            program_paths,
+            uninstaller_exe,
+            filtered_exe,
+            executable_paths,
+            registry_files,
+            open_processes,
+        )
 
-    def uninstall(self, program_paths=None, uninstaller_exe=None, filtered_exe=None,
-                  executable_paths=None, registry_files=None, open_processes=None):
+    def uninstall(
+        self,
+        program_paths=None,
+        uninstaller_exe=None,
+        filtered_exe=None,
+        executable_paths=None,
+        registry_files=None,
+        open_processes=None,
+    ):
         # Are you sure messagebox
         messagebox = QMessageBox()
         messagebox.setWindowIcon(self.UI.icon)
         messagebox.setWindowTitle("Are you sure?")
         messagebox.setText(f"Are you sure you want to uninstall {self.folder_name}?")
-        messagebox.setStandardButtons(QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No)
+        messagebox.setStandardButtons(
+            QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No
+        )
         messagebox.setDefaultButton(QMessageBox.StandardButton.No)
         messagebox.setIcon(QMessageBox.Icon.Question)
         result = messagebox.exec()
-        if not result:
+        if result == 65536 or not result:
             return
         if open_processes:
-            self.processes.find_processes_to_terminate(executable_paths, read_only=False,
-                                                       processes_to_terminate=open_processes)
+            self.processes.find_processes_to_terminate(
+                executable_paths, read_only=False, processes_to_terminate=open_processes
+            )
 
-        if uninstaller_exe and os.name == 'nt':
+        if uninstaller_exe and os.name == "nt":
             self.files.start_program_uninstaller(uninstaller_exe)
             # Are you sure messagebox
             messagebox = QMessageBox()
-            messagebox.setWindowTitle("Please DO NOT CLOSE UNTIL THE UNINSTALL IS COMPLETE?")
+            messagebox.setWindowTitle(
+                "Please DO NOT CLOSE UNTIL THE UNINSTALL IS COMPLETE"
+            )
             messagebox.setWindowIcon(self.UI.icon)
-            messagebox.setText(f"Only press YES after the program uninstall finishes.")
-            messagebox.setStandardButtons(QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No)
+            messagebox.setText("Only press YES after the program uninstall finishes.")
+            messagebox.setStandardButtons(
+                QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No
+            )
             messagebox.setDefaultButton(QMessageBox.StandardButton.No)
             messagebox.setIcon(QMessageBox.Icon.Warning)
 
         print(f"Uninstalling registry paths {registry_files}...")
 
         if registry_files:
-            self.registry.find_and_remove_registry_entries(read_only=False, registry_files=registry_files)
+            self.registry.find_and_remove_registry_entries(
+                read_only=False, registry_files=registry_files
+            )
 
         print(f"Uninstalling paths {program_paths}...")
 

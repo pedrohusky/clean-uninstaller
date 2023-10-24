@@ -11,22 +11,22 @@ from tkinter import messagebox
 from tools.registry import Registry
 
 language_translations = {
-    'en_US': 'Uninstall Program',
-    'es_ES': 'Desinstalar Programa',  # Spanish
-    'fr_FR': 'Désinstaller Programme',  # French
-    'de_DE': 'Programm deinstallieren',  # German
-    'it_IT': 'Disinstalla Programma',  # Italian
-    'pt_BR': 'Desinstalar Programa',  # Portuguese
-    'zh_CN': '卸载程序',  # Chinese (Simplified)
-    'ja_JP': 'プログラムをアンインストール',  # Japanese
-    'ko_KR': '프로그램 제거',  # Korean
-    'ru_RU': 'Деинсталляция программы',  # Russian
-    'ar_SA': 'إلغاء تثبيت البرنامج',  # Arabic (Saudi Arabia)
-    'hi_IN': 'प्रोग्राम को अनइंस्टॉल करें',  # Hindi
-    'tr_TR': 'Program Kaldır',  # Turkish
-    'nl_NL': 'Programma Deïnstalleren',  # Dutch
-    'sv_SE': 'Avinstallera Program',  # Swedish
-    'pl_PL': 'Odinstaluj Program',  # Polish
+    "en_US": "Uninstall Program",
+    "es_ES": "Desinstalar Programa",  # Spanish
+    "fr_FR": "Désinstaller Programme",  # French
+    "de_DE": "Programm deinstallieren",  # German
+    "it_IT": "Disinstalla Programma",  # Italian
+    "pt_BR": "Desinstalar Programa",  # Portuguese
+    "zh_CN": "卸载程序",  # Chinese (Simplified)
+    "ja_JP": "プログラムをアンインストール",  # Japanese
+    "ko_KR": "프로그램 제거",  # Korean
+    "ru_RU": "Деинсталляция программы",  # Russian
+    "ar_SA": "إلغاء تثبيت البرنامج",  # Arabic (Saudi Arabia)
+    "hi_IN": "प्रोग्राम को अनइंस्टॉल करें",  # Hindi
+    "tr_TR": "Program Kaldır",  # Turkish
+    "nl_NL": "Programma Deïnstalleren",  # Dutch
+    "sv_SE": "Avinstallera Program",  # Swedish
+    "pl_PL": "Odinstaluj Program",  # Polish
     # Add more languages and translations as needed
 }
 
@@ -39,11 +39,16 @@ def is_admin():
     except:
         return False
 
+
 def remove_registry_uninstall(menu_name):
     try:
         if is_admin():
-            uninstall_key = f"Software\\Microsoft\\Windows\\CurrentVersion\\Uninstall\\{menu_name}"
-            Registry(None).delete_sub_key(reg.HKEY_LOCAL_MACHINE, [uninstall_key], should_delete=True)
+            uninstall_key = (
+                f"Software\\Microsoft\\Windows\\CurrentVersion\\Uninstall\\{menu_name}"
+            )
+            Registry(None).delete_sub_key(
+                reg.HKEY_LOCAL_MACHINE, [uninstall_key], should_delete=True
+            )
     except Exception as e:
         output = "Error: " + str(e)
         print(output)
@@ -52,9 +57,11 @@ def remove_registry_uninstall(menu_name):
 def remove_custom_context_menu_command(menu_name, program_dir):
     try:
         if is_admin():
-            key = r'Folder\shell\{}'.format(menu_name)
-            Registry(None).delete_sub_key(reg.HKEY_CLASSES_ROOT, [key], should_delete=True)
-            backup_path = os.path.join(program_dir, 'registry_backup.reg')
+            key = r"Folder\shell\{}".format(menu_name)
+            Registry(None).delete_sub_key(
+                reg.HKEY_CLASSES_ROOT, [key], should_delete=True
+            )
+            backup_path = os.path.join(program_dir, "registry_backup.reg")
 
             if os.path.exists(backup_path):
                 try:
@@ -63,7 +70,9 @@ def remove_custom_context_menu_command(menu_name, program_dir):
                     print("Restored the registry key from the backup successfully.")
 
                 except Exception as e:
-                    print(f"Error while restoring the registry key from the backup: {e}")
+                    print(
+                        f"Error while restoring the registry key from the backup: {e}"
+                    )
 
     except Exception as e:
         output = "Error: " + str(e)
@@ -88,7 +97,7 @@ def uninstall_program(program_dir):
                 try:
                     for name in files:
                         file_path = os.path.join(root, name)
-                        if 'uninstaller.exe' in file_path:
+                        if "uninstaller.exe" in file_path:
                             uninstaller_path = file_path
                         else:
                             os.remove(file_path)
@@ -133,13 +142,16 @@ def schedule_deletion(program_directory):
     with open(batch_file, "w") as f:
         f.write(deletion_command)
 
-    subprocess.Popen(['cmd', '/c', batch_file], shell=True, creationflags=subprocess.CREATE_NO_WINDOW)
+    subprocess.Popen(
+        ["cmd", "/c", batch_file], shell=True, creationflags=subprocess.CREATE_NO_WINDOW
+    )
 
 
 def copy_self_to_temp():
     # Get the script's current directory and filename
-    program_dir = os.path.join(os.environ['ProgramFiles'], get_custom_menu_name(),
-                               'uninstaller.exe')  # Replace with the program installation directory
+    program_dir = os.path.join(
+        os.environ["ProgramFiles"], get_custom_menu_name(), "uninstaller.exe"
+    )  # Replace with the program installation directory
     script_filename = os.path.basename(program_dir)
 
     # Generate a temporary directory for the script
@@ -159,12 +171,15 @@ if __name__ == "__main__":
 
     # Now list the program_dir files
     files = os.listdir(program_dir)
-    required_files = ['icon.ico', 'UniClean-uninstaller.exe']
+    required_files = ["icon.ico", "UniClean-uninstaller.exe"]
 
     if all(file in files for file in required_files):
         remove_custom_context_menu_command(app_name, program_dir)
         remove_registry_uninstall(app_name)
         uninstaller_path = uninstall_program(program_dir)
-        messagebox.showinfo(f"{app_name} Uninstaller", f"{app_name} has been uninstalled.",
-                            icon=messagebox.INFO)
+        messagebox.showinfo(
+            f"{app_name} Uninstaller",
+            f"{app_name} has been uninstalled.",
+            icon=messagebox.INFO,
+        )
         schedule_deletion(program_dir)

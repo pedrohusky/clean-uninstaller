@@ -5,7 +5,9 @@ class Processes:
     def __init__(self):
         self.processes_to_terminate = []
 
-    def find_processes_to_terminate(self, executable_paths, read_only=False, processes_to_terminate=None):
+    def find_processes_to_terminate(
+        self, executable_paths, read_only=False, processes_to_terminate=None
+    ):
         if processes_to_terminate:
             self.processes_to_terminate.extend(processes_to_terminate)
             skip = True
@@ -14,14 +16,18 @@ class Processes:
 
         if not skip:
             # Locate and add processes to the list of processes to terminate
-            for process in psutil.process_iter(attrs=['pid', 'exe']):
+            for process in psutil.process_iter(attrs=["pid", "exe"]):
                 try:
-                    process_exe = process.info['exe']
+                    process_exe = process.info["exe"]
                     # Check if the process executable is one of the executables in executable_paths
                     for path in executable_paths:
                         if process_exe == path:
                             self.processes_to_terminate.append(process)
-                except (psutil.NoSuchProcess, psutil.AccessDenied, psutil.ZombieProcess):
+                except (
+                    psutil.NoSuchProcess,
+                    psutil.AccessDenied,
+                    psutil.ZombieProcess,
+                ):
                     pass
 
         if read_only:
