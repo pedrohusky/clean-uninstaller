@@ -8,7 +8,7 @@ import tempfile
 import winreg as reg
 from tkinter import messagebox
 
-from tools.registry import Registry
+from registry import Registry
 
 language_translations = {
     "en_US": "Uninstall Program",

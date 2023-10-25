@@ -1,0 +1,81 @@
+{
+  "MenuBar": {
+    "Settings": "Settings",
+    "Help": "Help",
+    "Exit": "Exit",
+    "About": "About",
+    "File": "File"
+  },
+  "AppUI": {
+    "Uninstall": "Uninstall",
+    "InvalidDirectory": "Directory is invalid or empty",
+    "DetectedUninstaller": "Detected uninstaller:",
+    "MainExe": "Main executable file",
+    "Uninstalled": "Uninstalled",
+    "UninstallError": "Uninstall error",
+    "Checkboxes": {
+      "Programs": {
+        "LabelText": "Program paths",
+        "LabelTooltip": "Select the dirs you want to remove.",
+        "CheckBoxTooltip": "Select the dir you want to remove from your computer."
+      },
+      "Executables": {
+        "LabelText": "Executable Paths",
+        "LabelTooltip": "Select the executable files you want to terminate their process to force a uninstall.",
+        "CheckBoxTooltip": ""
+      },
+      "Registry": {
+        "LabelText": "Registry Paths",
+        "LabelTooltip": "Select the registry files you want to remove from your computer.",
+        "CheckBoxTooltip": "Select the registry file you want to remove from your computer."
+      },
+      "Processes": {
+        "LabelText": "Open Processes",
+        "LabelTooltip": "Select the open processes you want to terminate to be able to uninstall.\nWarning: These are mandatory for the clean complete uninstall.",
+        "CheckBoxTooltip": "Select the open process you want to terminate to be able to uninstall."
+      }
+    },
+    "Info": {
+      "ProgramInfo": {
+        "Info": "Info",
+        "Has": "has",
+        "Directories": "directories",
+        "Files": "files",
+        "Using": "is using approximately",
+        "OfDisk": "of disk"
+      },
+      "SystemInfo": {
+        "Info": "System Info",
+        "FreeSpace": "Free Space before Uninstall",
+        "WillBeRemoved": "Will be removed from disk",
+        "FreeSpaceAfter": "Free Space after Uninstall"
+      }
+    },
+    "Buttons": {
+      "WithUninstaller": "Program Uninstaller + Clean Uninstall (Recommended)",
+      "WithoutUninstaller": "Clean Uninstall",
+      "Cancel": "Cancel",
+      "Ok": "Ok",
+      "Confirm": "Confirm",
+      "Save": "Save",
+      "AreYouSure": "Are you sure?",
+      "Update": "Update"
+    }
+  },
+  "Windows": {
+    "About": {
+      "CurrentVersion": "Current Version",
+      "NewVersion": "New version available",
+      "NoNewVersion": "No new version available",
+      "Newer": "Newer",
+      "UpToDate": "Up to date",
+      "Older": "Older",
+      "Creator": "Creator",
+    },
+    "Settings": {
+      "SelectLanguage": "Select Language:",
+      "EnableFastMode": "Enable Fast Mode"
+    }
+  }
+
+}

@@ -1,0 +1,80 @@
+{
+  "MenuBar": {
+    "Settings": "Configurações",
+    "Help": "Ajuda",
+    "Exit": "Sair",
+    "About": "Sobre",
+    "File": "Arquivo"
+  },
+  "AppUI": {
+    "Uninstall": "Desinstalar",
+    "InvalidDirectory": "Diretório é inválido ou vazio",
+    "DetectedUninstaller": "Desinstalador detectado:",
+    "MainExe": "Arquivo executável principal",
+    "Uninstalled": "Desinstalado",
+    "UninstallError": "Erro na desinstalação",
+    "Checkboxes": {
+      "Programs": {
+        "LabelText": "Caminhos dos programas",
+        "LabelTooltip": "Selecione os diretórios que deseja remover.",
+        "CheckBoxTooltip": "Selecione o diretório que deseja remover do seu computador."
+      },
+      "Executables": {
+        "LabelText": "Caminhos dos executáveis",
+        "LabelTooltip": "Selecione os arquivos executáveis que deseja encerrar seus processos para forçar a desinstalação.",
+        "CheckBoxTooltip": ""
+      },
+      "Registry": {
+        "LabelText": "Caminhos do registro",
+        "LabelTooltip": "Selecione os arquivos de registro que deseja remover do seu computador.",
+        "CheckBoxTooltip": "Selecione o arquivo de registro que deseja remover do seu computador."
+      },
+      "Processes": {
+        "LabelText": "Processos em Execução",
+        "LabelTooltip": "Selecione os processos em execução que deseja encerrar para poder desinstalar.\nAviso: Isso é obrigatório para uma desinstalação completa e limpa.",
+        "CheckBoxTooltip": "Selecione o processo em execução que deseja encerrar para poder desinstalá-lo."
+      }
+    },
+    "Info": {
+      "ProgramInfo": {
+        "Info": "Informações",
+        "Has": "possui",
+        "Directories": "diretórios",
+        "Files": "arquivos",
+        "Using": "está usando aproximadamente",
+        "OfDisk": "do disco"
+      },
+      "SystemInfo": {
+        "Info": "Informações do Sistema",
+        "FreeSpace": "Espaço Livre Antes da Desinstalação",
+        "WillBeRemoved": "Será removido do disco",
+        "FreeSpaceAfter": "Espaço Livre Após a Desinstalação"
+      }
+    },
+    "Buttons": {
+      "WithUninstaller": "Desinstalador de Programas + Desinstalação Limpa (Recomendado)",
+      "WithoutUninstaller": "Desinstalação Limpa",
+      "Cancel": "Cancelar",
+      "Ok": "OK",
+      "Confirm": "Confirmar",
+      "Save": "Salvar",
+      "AreYouSure": "Você tem certeza?",
+      "Update": "Atualizar"
+    }
+  },
+  "Windows": {
+    "About": {
+      "CurrentVersion": "Versão Atual",
+      "NewVersion": "Nova versão disponível",
+      "NoNewVersion": "Nenhuma nova versão disponível",
+      "Newer": "Mais Recente",
+      "UpToDate": "Atualizada",
+      "Older": "Antiga",
+      "Creator": "Criador"
+    },
+    "Settings": {
+      "SelectLanguage": "Selecionar Idioma:",
+      "EnableFastMode": "Ativar Modo Rápido"
+    }
+  }
+}

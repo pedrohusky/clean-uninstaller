@@ -161,8 +161,14 @@ def copy_program_to_installation_directory(
 
         print(f"New dir: {new_dir}")
 
-        # Copy "UniClean.exe" to the target directory
-        shutil.copy2(path, new_dir)
+        if os.path.isdir(new_dir):
+            output_path = os.path.join(final_path, "localization")
+            if os.path.exists(output_path):
+                shutil.rmtree(output_path)
+            print(f"Trying to copy {path} to {output_path}")
+            shutil.copytree(path, output_path)
+        else:
+            shutil.copy2(path, new_dir)
         print(f"Copied {name} to the installation directory.")
         return new_dir
 
@@ -186,10 +192,16 @@ class InstallationThread(QThread):
         new_folder = copy_program_to_installation_directory(
             program_script_path, selected_path=self.target_dir
         )
-        self.update_progress.emit(55)
+        self.update_progress.emit(35)
         icon_path = copy_program_to_installation_directory(
             os.path.join(MAIN_EXECUTABLE_PATH, "icon.ico"),
             "icon.ico",
+            selected_path=self.target_dir,
+        )
+        self.update_progress.emit(55)
+        copy_program_to_installation_directory(
+            os.path.join(MAIN_EXECUTABLE_PATH, "localization"),
+            "localization",
             selected_path=self.target_dir,
         )
         self.update_progress.emit(75)

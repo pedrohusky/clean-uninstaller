@@ -25,6 +25,9 @@ def generate_executable(script_name, exe_name):
         icon_path = os.path.join(
             os.path.abspath(os.path.dirname(__file__)), "icon", "icon.ico"
         )
+        localization_path = os.path.join(
+            os.path.abspath(os.path.dirname(__file__)), "localization"
+        )
 
         # Prepare the PyInstaller command
         if script_name == "tools\\install_ui.py":
@@ -41,6 +44,8 @@ def generate_executable(script_name, exe_name):
                 f"{uninstaller_path};.",
                 "--add-data",
                 f"{icon_path};.",
+                "--add-data",
+                f"{localization_path};localization",
                 "--icon",
                 f"{icon_path}",
                 # Add "UniClean.exe" to the root directory of the generated executable
@@ -90,7 +95,7 @@ if __name__ == "__main__":
     # The script_name is the name of the script you want to convert to an EXE.
     # In this case, we are using "installer.py".
     generate_executable(
-        f"tools{path_separator}clean_uninstall.py", exe_name=f"UniClean{exe_extension}"
+        f"clean_uninstall.py", exe_name=f"UniClean{exe_extension}"
     )  # Pass the desired executable name
 
     # See if platform is windows

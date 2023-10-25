@@ -1,3 +1,5 @@
+import json
+import locale
 import os
 from functools import partial
 
@@ -16,11 +18,13 @@ from PyQt6.QtWidgets import (
     QGridLayout,
     QFileIconProvider,
     QHBoxLayout,
+    QMenu,
+    QDialog,
 )
 
 
 class UninstallerUI:
-    def __init__(self, uninstaller, icon):
+    def __init__(self, uninstaller, program_dir):
         super().__init__()
 
         self.uninstall_button_uninstaller = None
@@ -33,7 +37,33 @@ class UninstallerUI:
         self.selected_executables = []
         self.selected_registries = []
         self.selected_processes = []
-        self.icon = icon
+        self.program_dir = program_dir
+        self.icon = os.path.join(program_dir, "icon.ico")
+        self.strings = None
+        self.load_strings()
+        print(self.strings)
+
+    def load_strings(self):
+        """
+        Load strings from the localization folder based on the system language.
+
+        :return: None
+        """
+        # Path to the localization folder
+        localization_dir = os.path.join(self.program_dir, "localization")  # Replace with the path to your localization folder
+    
+        # Get the default system language
+        system_language = locale.getdefaultlocale()[0]
+        
+        print(system_language)
+    
+        # Define the desired language code (fallback to "en" if not found)
+        language = system_language if os.path.exists(os.path.join(localization_dir, f"strings_{system_language}.json")) else "en"
+
+        strings_file = os.path.join(localization_dir, f"strings_{language}.json")
+
+        with open(strings_file, "r", encoding="utf-8") as file:
+            self.strings = json.load(file)
 
     def close_ui(self):
         self.app.quit()
@@ -118,15 +148,46 @@ class UninstallerUI:
         # Set the new position
         self.main_window.move(int(new_x), int(new_y))
 
+    def create_menu_bar(self):
+        menuBar = self.main_window.menuBar()  # No need for self.main_window.menuBar()
+
+        fileMenu = QMenu(self.strings["MenuBar"]["File"], self.main_window)
+        fileMenu.addAction(
+            self.strings["MenuBar"]["Settings"], self.open_settings_window
+        )
+        fileMenu.addAction(self.strings["MenuBar"]["Exit"], self.close_ui)
+
+        helpMenu = QMenu(self.strings["MenuBar"]["Help"], self.main_window)
+        helpMenu.addAction(self.strings["MenuBar"]["About"], self.open_about_window)
+
+        menuBar.addMenu(fileMenu)
+        menuBar.addMenu(helpMenu)
+
+    def close_ui(self):
+        self.main_window.close()
+
+    def open_about_window(self):
+        settings_window = self.uninstaller.about_window
+        settings_window.exec()
+
+    def open_settings_window(self):
+        settings_window = self.uninstaller.settings_window
+        settings_window.exec()
+
     def create_confirmation_ui(self):
         self.app = QApplication([])
         self.file_icon_provider = QFileIconProvider()  # Create an icon provider
+        self.uninstaller.init_windows()
         main_window = QMainWindow()
         self.icon = QIcon(self.icon)
         qdarktheme.setup_theme("auto")
         self.main_window = main_window
         main_window.setWindowIcon(self.icon)
-        main_window.setWindowTitle(f"Uninstall {self.uninstaller.folder_name}?")
+
+        main_window.setWindowTitle(
+            f"{self.strings['AppUI']['Uninstall']} {self.uninstaller.folder_name}?"
+        )
+        self.create_menu_bar()
 
         central_widget = QWidget(main_window)
         main_layout = QVBoxLayout(central_widget)
@@ -153,9 +214,10 @@ class UninstallerUI:
         ):
             # Display a label showing there's nothing to do, and a button to exit
             main_layout.addWidget(
-                QLabel("No files found"), alignment=Qt.AlignmentFlag.AlignCenter
+                QLabel(self.strings["AppUI"]["InvalidDirectory"]),
+                alignment=Qt.AlignmentFlag.AlignCenter,
             )
-            self.uninstall_button = QPushButton("Exit")
+            self.uninstall_button = QPushButton(self.strings["MenuBar"]["Exit"])
             self.uninstall_button.clicked.connect(self.close_ui)
             main_layout.addWidget(self.uninstall_button)
             not_found = True
@@ -167,22 +229,30 @@ class UninstallerUI:
             if uninstaller_exe:
                 main_layout.addWidget(
                     self.generate_label_with_icon(
-                        uninstaller_exe, "Detected Uninstaller:", icon=uninstaller_exe
+                        uninstaller_exe,
+                        self.strings["AppUI"]["DetectedUninstaller"],
+                        icon=uninstaller_exe,
                     )
                 )
 
             if filtered_exe and filtered_exe != uninstaller_exe:
                 main_layout.addWidget(
                     self.generate_label_with_icon(
-                        filtered_exe, "Main executable file:", icon=filtered_exe
+                        filtered_exe,
+                        self.strings["AppUI"]["MainExe"],
+                        icon=filtered_exe,
                     )
                 )
 
             checkboxes_layout = QGridLayout()
 
             if program_paths:
-                program_paths_label = QLabel(f"Program Paths ({len(program_paths)})")
-                program_paths_label.setToolTip("Select the dirs you want to remove.")
+                program_paths_label = QLabel(
+                    f"{self.strings['AppUI']['Checkboxes']['Programs']['LabelText']} ({len(program_paths)})"
+                )
+                program_paths_label.setToolTip(
+                    self.strings["AppUI"]["Checkboxes"]["Programs"]["LabelTooltip"]
+                )
                 program_paths_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
                 checkboxes_layout.addWidget(program_paths_label, 0, 0)
 
@@ -217,7 +287,9 @@ class UninstallerUI:
 
                     checkbox.setIcon(icon)  # Set the icon for the checkbox
                     checkbox.setToolTip(
-                        "Select the dir you want to remove from your computer."
+                        self.strings["AppUI"]["Checkboxes"]["Programs"][
+                            "CheckBoxTooltip"
+                        ]
                     )
                     update_state = partial(
                         self.update_uninstall_state, item, checkbox, "Path"
@@ -231,11 +303,10 @@ class UninstallerUI:
 
             if executable_paths:
                 executable_paths_label = QLabel(
-                    f"Executable Paths ({len(executable_paths)})"
+                    f"{self.strings['AppUI']['Checkboxes']['Executables']['LabelText']} ({len(executable_paths)})"
                 )
                 executable_paths_label.setToolTip(
-                    "Select the executable files you want to terminate their "
-                    "process to force a uninstall.\n"
+                    self.strings["AppUI"]["Checkboxes"]["Executables"]["LabelTooltip"]
                 )
                 executable_paths_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
                 checkboxes_layout.addWidget(executable_paths_label, 0, 1)
@@ -272,9 +343,11 @@ class UninstallerUI:
                 checkboxes_layout.addWidget(executable_paths_scroll, 1, 1)
 
             if registry_files:
-                registry_files_label = QLabel(f"Registry Files ({len(registry_files)})")
+                registry_files_label = QLabel(
+                    f"{self.strings['AppUI']['Checkboxes']['Registry']['LabelText']} ({len(registry_files)})"
+                )
                 registry_files_label.setToolTip(
-                    "Select the registry files you want to remove from your computer."
+                    self.strings["AppUI"]["Checkboxes"]["Registry"]["LabelTooltip"]
                 )
                 registry_files_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
                 checkboxes_layout.addWidget(registry_files_label, 0, 2)
@@ -302,7 +375,9 @@ class UninstallerUI:
                     )
                     checkbox.setIcon(icon)  # Set the icon for the checkbox
                     checkbox.setToolTip(
-                        "Select the registry file you want to remove from your computer."
+                        self.strings["AppUI"]["Checkboxes"]["Registry"][
+                            "CheckBoxTooltip"
+                        ]
                     )
                     checkboxes.append(checkbox)
                     update_state = partial(
@@ -316,10 +391,11 @@ class UninstallerUI:
                 checkboxes_layout.addWidget(registry_files_scroll, 1, 2)
 
             if open_processes:
-                process_label = QLabel(f"Open Processes ({len(open_processes)})")
+                process_label = QLabel(
+                    f"{self.strings['AppUI']['Checkboxes']['Processes']['LabelText']} ({len(open_processes)})"
+                )
                 process_label.setToolTip(
-                    "Select the open processes you want to terminate to be able to uninstall.\n"
-                    "Warning: These are mandatory for the clean complete uninstall."
+                    self.strings["AppUI"]["Checkboxes"]["Processes"]["LabelTooltip"]
                 )
                 process_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
                 checkboxes_layout.addWidget(process_label, 0, 3)
@@ -346,7 +422,9 @@ class UninstallerUI:
                     icon = QIcon(self.file_icon_provider.icon(info).pixmap(32, 32))
                     checkbox.setIcon(icon)  # Set the icon for the checkbox
                     checkbox.setToolTip(
-                        "Select the open process you want to terminate to be able to uninstall."
+                        self.strings["AppUI"]["Checkboxes"]["Processes"][
+                            "CheckBoxTooltip"
+                        ]
                     )
                     checkboxes.append(checkbox)
                     update_state = partial(
@@ -376,10 +454,10 @@ class UninstallerUI:
             ) * 100
 
             overall_info_label = QLabel(
-                f"{self.uninstaller.folder_name} Info: \n\n"
-                f"{self.uninstaller.folder_name} has {overall_info['dir_count']} directories.\n"
-                f"{self.uninstaller.folder_name} has {overall_info['file_count']} files.\n"
-                f"{self.uninstaller.folder_name} is using approximately: {program_size} {unit} ({total_space_used_percentage:.2f}% of disk)\n"
+                f"{self.uninstaller.folder_name} {self.strings['AppUI']['Info']['ProgramInfo']['Info']}: \n\n"
+                f"{self.uninstaller.folder_name} {self.strings['AppUI']['Info']['ProgramInfo']['Has']} {overall_info['dir_count']} {self.strings['AppUI']['Info']['ProgramInfo']['Directories']}.\n"
+                f"{self.uninstaller.folder_name} {self.strings['AppUI']['Info']['ProgramInfo']['Has']} {overall_info['file_count']} {self.strings['AppUI']['Info']['ProgramInfo']['Files']}.\n"
+                f"{self.uninstaller.folder_name} {self.strings['AppUI']['Info']['ProgramInfo']['Using']}: {program_size} {unit} ({total_space_used_percentage:.2f}% {self.strings['AppUI']['Info']['ProgramInfo']['OfDisk']})\n"
             )
 
             # Calculate the gain in storage in percentage
@@ -390,10 +468,10 @@ class UninstallerUI:
             ) * 100
 
             system_info_label = QLabel(
-                f"System Info: \n\n"
-                f"Free Space Before Uninstall: {system_info['free_space_before_converted']} {system_info['free_space_before_unit']} \n"
-                f"Will be removed from disk: {program_size} {unit}\n"
-                f"Free Space After Uninstall: {system_info['free_space_after_converted']} {system_info['free_space_after_unit']} (+{storage_gain_percentage:.2f}%)\n"
+                f"{self.strings['AppUI']['Info']['SystemInfo']['Info']}: \n\n"
+                f"{self.strings['AppUI']['Info']['SystemInfo']['FreeSpace']}: {system_info['free_space_before_converted']} {system_info['free_space_before_unit']} \n"
+                f"{self.strings['AppUI']['Info']['SystemInfo']['WillBeRemoved']}: {program_size} {unit}\n"
+                f"{self.strings['AppUI']['Info']['SystemInfo']['FreeSpaceAfter']}: {system_info['free_space_after_converted']} {system_info['free_space_after_unit']} (+{storage_gain_percentage:.2f}%)\n"
             )
 
             # Create a horizontal layout
@@ -413,7 +491,7 @@ class UninstallerUI:
 
             if uninstaller_exe:
                 self.uninstall_button_uninstaller = QPushButton(
-                    "Program Uninstaller + Clean Uninstall (Recommended)"
+                    self.strings["AppUI"]["Buttons"]["WithUninstaller"]
                 )
                 self.uninstall_button_uninstaller.setEnabled(False)
                 uninstall_action = partial(
@@ -427,9 +505,7 @@ class UninstallerUI:
                 self.uninstall_button_uninstaller.clicked.connect(uninstall_action)
                 main_layout.addWidget(self.uninstall_button_uninstaller)
 
-            self.uninstall_button = QPushButton(
-                "Clean Uninstall"
-            )
+            self.uninstall_button = QPushButton(self.strings['AppUI']['Buttons']['WithoutUninstaller'])
             self.uninstall_button.setEnabled(False)
             uninstall_action = partial(
                 self.uninstaller.uninstall,
@@ -442,7 +518,7 @@ class UninstallerUI:
             self.uninstall_button.clicked.connect(uninstall_action)
             main_layout.addWidget(self.uninstall_button)
 
-            cancel_button = QPushButton("Cancel")
+            cancel_button = QPushButton(self.strings['AppUI']['Buttons']['Cancel'])
             cancel_button.clicked.connect(self.close_ui)
             main_layout.addWidget(cancel_button)
 

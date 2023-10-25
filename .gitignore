@@ -14,4 +14,4 @@ venv/
 
 # Ignore all pycaches
 *__pycache__
-tools/test_program.py
+test_program.py

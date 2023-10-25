@@ -1,15 +1,18 @@
 import os
 import sys
 from PyQt6.QtWidgets import QMessageBox
-from processes import Processes
-from registry import Registry
-from files import Files
-from ui import UninstallerUI
+from tools.processes import Processes
+from tools.registry import Registry
+from tools.files import Files
+from tools.ui import UninstallerUI
+from windows.settings_window import MySettingsWindow
+from windows.about_window import MyAboutWindow
 
 
 class Uninstaller:
     def __init__(self, path):
         super().__init__()
+        self.current_version = "v1.0"
         self.path = path
         self.folder_name = os.path.basename(path)
         self.program_name = ""
@@ -18,9 +21,15 @@ class Uninstaller:
         self.files = Files(self)
         # Check if the script is running from the temporary directory
         program_dir = os.path.dirname(os.path.abspath(sys.executable))
-        self.UI = UninstallerUI(self, os.path.join(program_dir, "icon.ico"))
+        self.UI = UninstallerUI(self, os.path.join(program_dir))
+        self.settings_window = None
+        self.about_window = None
 
         self.processes_to_terminate = []
+
+    def init_windows(self):
+        self.settings_window = MySettingsWindow(self.UI)
+        self.about_window = MyAboutWindow(self.UI)
 
     def retrieve_information(self):
         program_paths = self.files.find_program_installation_path()
@@ -74,10 +83,10 @@ class Uninstaller:
         messagebox.setDefaultButton(QMessageBox.StandardButton.No)
         messagebox.setIcon(QMessageBox.Icon.Question)
         result = messagebox.exec()
-        
+
         if result == 65536 or not result:
             return
-        
+
         if open_processes:
             self.processes.find_processes_to_terminate(
                 executable_paths, read_only=False, processes_to_terminate=open_processes
