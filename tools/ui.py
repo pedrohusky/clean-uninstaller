@@ -419,8 +419,7 @@ class UninstallerUI:
                 uninstall_action = partial(
                     self.uninstaller.uninstall,
                     self.selected_paths,
-                    None,
-                    filtered_exe,
+                    uninstaller_exe,
                     self.selected_executables,
                     self.selected_registries,
                     self.selected_processes,
@@ -429,14 +428,13 @@ class UninstallerUI:
                 main_layout.addWidget(self.uninstall_button_uninstaller)
 
             self.uninstall_button = QPushButton(
-                "Clean Uninstall (Remove everything that is displayed above)"
+                "Clean Uninstall"
             )
             self.uninstall_button.setEnabled(False)
             uninstall_action = partial(
                 self.uninstaller.uninstall,
                 self.selected_paths,
-                uninstaller_exe,
-                filtered_exe,
+                None,
                 self.selected_executables,
                 self.selected_registries,
                 self.selected_processes,

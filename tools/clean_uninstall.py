@@ -59,7 +59,6 @@ class Uninstaller:
         self,
         program_paths=None,
         uninstaller_exe=None,
-        filtered_exe=None,
         executable_paths=None,
         registry_files=None,
         open_processes=None,
@@ -75,8 +74,10 @@ class Uninstaller:
         messagebox.setDefaultButton(QMessageBox.StandardButton.No)
         messagebox.setIcon(QMessageBox.Icon.Question)
         result = messagebox.exec()
+        
         if result == 65536 or not result:
             return
+        
         if open_processes:
             self.processes.find_processes_to_terminate(
                 executable_paths, read_only=False, processes_to_terminate=open_processes
