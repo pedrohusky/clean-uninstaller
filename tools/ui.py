@@ -3,7 +3,7 @@ import locale
 import os
 from functools import partial
 
-import qdarktheme
+import qdarktheme as theme
 from PyQt6.QtCore import Qt, QFileInfo, QCoreApplication
 from PyQt6.QtGui import QIcon
 from PyQt6.QtWidgets import (
@@ -330,7 +330,7 @@ class UninstallerUI:
         self.main_layout = QVBoxLayout(central_widget)
         self.main_window.setCentralWidget(central_widget)
         self.create_menu_bar()
-        qdarktheme.setup_theme(self.settings["Theme"].lower())
+        theme.setup_theme(self.settings["Theme"].lower())
 
         (
             program_paths,

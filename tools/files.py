@@ -142,7 +142,9 @@ class Files:
                         "Programs",
                         "Startup",
                     ),
-                    os.path.expanduser("~\\AppData\\Roaming\\Microsoft\\Windows\\Start Menu\\Programs"),
+                    os.path.expanduser(
+                        "~\\AppData\\Roaming\\Microsoft\\Windows\\Start Menu\\Programs"
+                    ),
                     os.path.expanduser("~\\AppData\\Local"),
                     os.path.expanduser("~\\AppData\\Roaming"),
                 ]

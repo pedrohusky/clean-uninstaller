@@ -136,7 +136,7 @@ if __name__ == "__main__":
     # Create a ThreadPoolExecutor to generate the uninstaller and UniClean concurrently
     with concurrent.futures.ThreadPoolExecutor(max_workers=2) as executor:
         uninstaller_future = executor.submit(generate_executable, f"tools{path_separator}uninstaller.py", f"uninstaller{exe_extension}")
-        uniclean_future = executor.submit(generate_executable, f"clean_uninstall.py", f"UniClean{exe_extension}")
+        uniclean_future = executor.submit(generate_executable, "clean_uninstall.py", f"UniClean{exe_extension}")
 
         # Wait for both tasks to complete
         concurrent.futures.wait([uninstaller_future, uniclean_future])
