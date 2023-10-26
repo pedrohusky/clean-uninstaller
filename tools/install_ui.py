@@ -36,7 +36,7 @@ if getattr(sys, "frozen", False):
     MAIN_EXECUTABLE_PATH = sys._MEIPASS
 else:
     MAIN_EXECUTABLE_PATH = os.path.dirname(os.path.abspath(__file__))
-    
+
 
 def load_strings():
     """
@@ -45,16 +45,22 @@ def load_strings():
     :return: None
     """
     # Path to the localization folder
-    localization_dir = os.path.join(MAIN_EXECUTABLE_PATH, "localization")  # Replace with the path to your localization folder
-    
+    localization_dir = os.path.join(
+        MAIN_EXECUTABLE_PATH, "localization"
+    )  # Replace with the path to your localization folder
+
     # Get the default system language
     system_language = locale.getdefaultlocale()[0]
-    
-    # Define the desired language code (fallback to "en" if not found)
-    language = system_language if os.path.exists(os.path.join(localization_dir, f"strings_{system_language}.json")) else "en"
 
-    strings_file = os.path.join(localization_dir, f"strings_{language}.json")
-    
+    # Define the desired language code (fallback to "en" if not found)
+    language = (
+        system_language
+        if os.path.exists(os.path.join(localization_dir, f"{system_language}.json"))
+        else "en"
+    )
+
+    strings_file = os.path.join(localization_dir, f"{language}.json")
+
     strings = {}
 
     with open(strings_file, "r", encoding="utf-8") as file:
@@ -318,9 +324,7 @@ class InstallerUI(QMainWindow):
         image = QLabel()
         image.setPixmap(self.icon.pixmap(128, 128))
         layout.addWidget(image, alignment=Qt.AlignmentFlag.AlignCenter)
-        label = QLabel(
-            localization["InstallUI"]["WelcomeScreen"]
-        )
+        label = QLabel(localization["InstallUI"]["WelcomeScreen"])
         layout.addWidget(label, alignment=Qt.AlignmentFlag.AlignCenter)
         next_button = QPushButton(localization["AppUI"]["Buttons"]["Next"])
         next_button.clicked.connect(self.next_screen)
@@ -335,16 +339,18 @@ class InstallerUI(QMainWindow):
         default_dir = os.path.join(os.environ["ProgramFiles"], app_name)
         self.selected_path = default_dir
 
-        self.target_dir_label = QLabel(f"{localization['InstallUI']['TargetDirectory']}: {default_dir}")
-        select_target_button = QPushButton(localization['InstallUI']['ChangeDirectory'])
+        self.target_dir_label = QLabel(
+            f"{localization['InstallUI']['TargetDirectory']}: {default_dir}"
+        )
+        select_target_button = QPushButton(localization["InstallUI"]["ChangeDirectory"])
         select_target_button.clicked.connect(self.select_target_directory)
 
         layout.addWidget(self.target_dir_label, alignment=Qt.AlignmentFlag.AlignCenter)
         layout.addWidget(select_target_button)
 
-        prev_button = QPushButton(localization['AppUI']['Buttons']['Previous'])
+        prev_button = QPushButton(localization["AppUI"]["Buttons"]["Previous"])
         prev_button.clicked.connect(self.previous_screen)
-        next_button = QPushButton(localization['AppUI']['Buttons']['Next'])
+        next_button = QPushButton(localization["AppUI"]["Buttons"]["Next"])
         next_button.clicked.connect(self.next_screen)
 
         button_layout = QHBoxLayout()
@@ -355,8 +361,12 @@ class InstallerUI(QMainWindow):
         self.path_selection_screen.setLayout(layout)
 
     def select_target_directory(self):
-        target_dir = QFileDialog.getExistingDirectory(self, localization['InstallUI']['SelectTargetDirectory'])
-        self.target_dir_label.setText(f"{localization['InstallUI']['TargetDirectory']}: {target_dir}")
+        target_dir = QFileDialog.getExistingDirectory(
+            self, localization["InstallUI"]["SelectTargetDirectory"]
+        )
+        self.target_dir_label.setText(
+            f"{localization['InstallUI']['TargetDirectory']}: {target_dir}"
+        )
         self.selected_path = target_dir
 
     def setup_final_screen(self):
@@ -364,7 +374,7 @@ class InstallerUI(QMainWindow):
         label = QLabel(f"{localization['InstallUI']['InstallationComplete']}!")
         layout.addWidget(label, alignment=Qt.AlignmentFlag.AlignCenter)
         # Add the close button to close the installer
-        close_button = QPushButton(localization['AppUI']['Buttons']['Close'])
+        close_button = QPushButton(localization["AppUI"]["Buttons"]["Close"])
         close_button.clicked.connect(self.close)
         layout.addWidget(close_button, alignment=Qt.AlignmentFlag.AlignCenter)
         self.final_screen.setLayout(layout)
@@ -379,9 +389,9 @@ class InstallerUI(QMainWindow):
 
         # Add summary information here
 
-        prev_button = QPushButton(localization['AppUI']['Buttons']['Previous'])
+        prev_button = QPushButton(localization["AppUI"]["Buttons"]["Previous"])
         prev_button.clicked.connect(self.previous_screen)
-        next_button = QPushButton(localization['InstallUI']['Install'])
+        next_button = QPushButton(localization["InstallUI"]["Install"])
         next_button.clicked.connect(self.next_screen)
 
         button_layout = QHBoxLayout()
@@ -402,7 +412,7 @@ class InstallerUI(QMainWindow):
         self.progress_bar = QProgressBar()
         layout.addWidget(self.progress_bar)
 
-        cancel_button = QPushButton(localization['AppUI']['Buttons']['Cancel'])
+        cancel_button = QPushButton(localization["AppUI"]["Buttons"]["Cancel"])
         cancel_button.clicked.connect(self.cancel_installation)
         layout.addWidget(cancel_button)
 

@@ -23,12 +23,15 @@ def cleanup(item):
     if os.path.exists(item_path):
         os.remove(item_path)
     
-def clean_up_all():
+def clean_up_all(even_installer):
     dist = os.path.join("dist")
     build = os.path.join("build")
     
     if os.path.exists(dist):
         for item in os.listdir(dist):
+            if even_installer:
+                shutil.rmtree(os.path.join(dist))
+                continue
             if "installer-" not in item:
                 if os.path.isdir(os.path.join(dist, item)):
                     shutil.rmtree(os.path.join(dist, item))
@@ -118,7 +121,7 @@ if __name__ == "__main__":
 
     platform = sys.platform
     
-    clean_up_all()
+    clean_up_all(True)
 
     if platform == "linux" or platform == "darwin":
         path_separator = "/"
@@ -144,4 +147,4 @@ if __name__ == "__main__":
             exe_name=f"UniClean-installer-v1.0{exe_extension}",
         )  # Pass the desired executable name
         
-    clean_up_all()
+    clean_up_all(False)

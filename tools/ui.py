@@ -4,7 +4,7 @@ import os
 from functools import partial
 
 import qdarktheme
-from PyQt6.QtCore import Qt, QFileInfo
+from PyQt6.QtCore import Qt, QFileInfo, QCoreApplication
 from PyQt6.QtGui import QIcon
 from PyQt6.QtWidgets import (
     QApplication,
@@ -19,8 +19,7 @@ from PyQt6.QtWidgets import (
     QFileIconProvider,
     QHBoxLayout,
     QMenu,
-    QDialog,
-    QTextEdit,
+    QTextEdit
 )
 
 
@@ -42,6 +41,8 @@ class UninstallerUI:
         self.selected_processes = []
         self.program_dir = program_dir
         self.icon = os.path.join(program_dir, "icon.ico")
+        self.saved_height = None
+        self.saved_width = None
 
     def load_strings(self):
         """
@@ -65,13 +66,11 @@ class UninstallerUI:
         # Define the desired language code (fallback to "en" if not found)
         language = (
             system_language
-            if os.path.exists(
-                os.path.join(localization_dir, f"strings_{system_language}.json")
-            )
+            if os.path.exists(os.path.join(localization_dir, f"{system_language}.json"))
             else "en_US"
         )
 
-        strings_file = os.path.join(localization_dir, f"strings_{language}.json")
+        strings_file = os.path.join(localization_dir, f"{language}.json")
 
         strings = {}
 
@@ -115,9 +114,9 @@ class UninstallerUI:
         setting_dir = os.path.join(
             self.program_dir, "settings"
         )  # Replace with the path to your setting folder
-        strings_file = os.path.join(setting_dir, "settings.json")
+        settings_file = os.path.join(setting_dir, "settings.json")
 
-        with open(strings_file, "w", encoding="utf-8") as file:
+        with open(settings_file, "w", encoding="utf-8") as file:
             json.dump(settings, file, indent=4)
 
         self.reopen()
@@ -181,7 +180,8 @@ class UninstallerUI:
         title_label = QLabel(title_text)
         label_layout.addWidget(title_label)
         label_layout.addWidget(icon_label)
-        label = QLabel(label_text)
+        label = QLabel(os.path.basename(label_text))
+        label.setToolTip(label_text)
         label_layout.addWidget(label)
         label_layout.addStretch()
         label_layout.addSpacing(5)
@@ -194,16 +194,21 @@ class UninstallerUI:
     def center_window(self):
         # Get the screen geometry
         screen_geometry = self.app.primaryScreen().geometry()
+        print(screen_geometry)
 
-        # Calculate the center point
-        center_point = screen_geometry.center()
+        # Calculate the center point of the screen
+        center_x = screen_geometry.center().x()
+        center_y = screen_geometry.center().y()
+        print(center_x, center_y)
 
         # Calculate the new position for the main window
-        new_x = center_point.x() - self.main_window.width() / 2
-        new_y = center_point.y() - self.main_window.height() / 1.85
+        new_x = center_x - self.main_window.width() / 2
+        new_y = center_y - self.main_window.height() / 2
+        print(new_x, new_y)
 
         # Set the new position
         self.main_window.move(int(new_x), int(new_y))
+
 
     def create_menu_bar(self):
         menuBar = self.main_window.menuBar()  # No need for self.main_window.menuBar()
@@ -255,7 +260,7 @@ class UninstallerUI:
 
             if program_paths:
                 removal_list.append(
-                    f"{self.strings['AppUI']['Checkboxes']['Programs']} ({len(program_paths)}):"
+                    f"{self.strings['AppUI']['Checkboxes']['Programs']['LabelText']} ({len(program_paths)}):"
                 )
                 removal_list.extend(program_paths)
 
@@ -269,19 +274,19 @@ class UninstallerUI:
 
             if executable_paths:
                 removal_list.append(
-                    f"{self.strings['AppUI']['Checkboxes']['Executables']} ({len(executable_paths)}):"
+                    f"{self.strings['AppUI']['Checkboxes']['Executables']['LabelText']} ({len(executable_paths)}):"
                 )
                 removal_list.extend(executable_paths)
 
             if registry_files:
                 removal_list.append(
-                    f"{self.strings['AppUI']['Checkboxes']['Registry']} ({len(registry_files)}):"
+                    f"{self.strings['AppUI']['Checkboxes']['Registry']['LabelText']} ({len(registry_files)}):"
                 )
                 removal_list.extend(registry_files)
 
             if open_processes:
                 removal_list.append(
-                    f"{self.strings['AppUI']['Checkboxes']['Processes']} ({len(open_processes)}):"
+                    f"{self.strings['AppUI']['Checkboxes']['Processes']['LabelText']} ({len(open_processes)}):"
                 )
                 for process in open_processes:
                     removal_list.append(f"- PID: {process.pid} | {process.name()}")
@@ -290,6 +295,7 @@ class UninstallerUI:
             removal_list_textedit = QTextEdit()
             removal_list_textedit.setReadOnly(True)
             removal_list_textedit.setPlainText("\n".join(removal_list))
+            removal_list_textedit.setMinimumHeight(200)
 
             # Create a "Continue" button
             continue_button = QPushButton(self.strings["AppUI"]["Buttons"]["Continue"])
@@ -316,10 +322,10 @@ class UninstallerUI:
     def generate_UI(self):
         self.settings = self.load_settings()
         self.strings = self.load_strings()
-        
+
         self.uninstall_button = None
         self.uninstall_button_uninstaller = None
-        
+
         central_widget = QWidget(self.main_window)
         self.main_layout = QVBoxLayout(central_widget)
         self.main_window.setCentralWidget(central_widget)
@@ -351,6 +357,7 @@ class UninstallerUI:
             self.uninstall_button = QPushButton(self.strings["MenuBar"]["Exit"])
             self.uninstall_button.clicked.connect(self.close_ui)
             self.main_layout.addWidget(self.uninstall_button)
+            self.main_window.adjustSize()
         else:
             is_fast_mode = self.is_fast_mode(
                 program_paths,
@@ -362,14 +369,15 @@ class UninstallerUI:
             )
 
             if is_fast_mode:
+                self.update_window_size(0)
                 return
-            
+
             checkboxes = []
             self.selected_paths = []
             self.selected_executables = []
             self.selected_registries = []
             self.selected_processes = []
-            
+
             self.main_window.setWindowTitle(
                 f"{self.strings['AppUI']['Uninstall']} {self.uninstaller.folder_name}?"
             )
@@ -380,7 +388,8 @@ class UninstallerUI:
                         uninstaller_exe,
                         self.strings["AppUI"]["DetectedUninstaller"],
                         icon=uninstaller_exe,
-                    ), alignment=Qt.AlignmentFlag.AlignCenter
+                    ),
+                    alignment=Qt.AlignmentFlag.AlignCenter,
                 )
 
             if filtered_exe and filtered_exe != uninstaller_exe:
@@ -389,10 +398,12 @@ class UninstallerUI:
                         filtered_exe,
                         self.strings["AppUI"]["MainExe"],
                         icon=filtered_exe,
-                    ), alignment=Qt.AlignmentFlag.AlignCenter
+                    ),
+                    alignment=Qt.AlignmentFlag.AlignCenter,
                 )
 
             checkboxes_layout = QGridLayout()
+            checkboxes_layout.setRowMinimumHeight(1, 200)
 
             if program_paths:
                 program_paths_label = QLabel(
@@ -586,6 +597,8 @@ class UninstallerUI:
                 checkboxes_layout.addWidget(open_processes_scroll, 1, 3)
 
             self.main_layout.addLayout(checkboxes_layout)
+            
+            
 
             overall_info = self.uninstaller.files.get_directory_info(program_paths)
             system_info = self.uninstaller.files.get_system_overall_info(
@@ -673,6 +686,29 @@ class UninstallerUI:
             self.main_layout.addWidget(cancel_button)
 
             self.update_uninstall_state(None, None, "None")
+            
+            self.update_window_size(checkboxes_layout.count())
+            
+            
+            # Ensure that the window is resized to fit its contents
+            #self.main_window.adjustSize()
+            
+    def update_window_size(self, count):
+        max_count = 8  # Count where it maximizes
+        
+        self.main_window.adjustSize()
+    
+        if count == max_count: 
+            self.main_window.showMaximized()
+        else:
+            self.main_window.show()
+            QCoreApplication.processEvents()  # Process pending events
+            self.center_window()
+        
+        
+        
+
+
 
     def create_confirmation_ui(self):
         self.settings = self.load_settings()
@@ -685,7 +721,4 @@ class UninstallerUI:
         self.main_window.setWindowIcon(self.icon)
 
         self.generate_UI()
-
-        self.main_window.show()
-        self.center_window()
         self.app.exec()

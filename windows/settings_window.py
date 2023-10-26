@@ -1,3 +1,4 @@
+import os
 from PyQt6.QtWidgets import QDialog, QLabel, QPushButton, QComboBox, QCheckBox, QVBoxLayout, QSpacerItem, QSizePolicy
 from PyQt6.QtCore import Qt
 class MySettingsWindow(QDialog):
@@ -15,6 +16,17 @@ class MySettingsWindow(QDialog):
         self.fast_mode_checkbox = None
 
         self.create_settings_ui()
+        
+    def update_languages(self):
+        # Path to the localization folder
+        localization_dir = os.path.join(
+            self.ui.program_dir, "localization"
+        )  # Replace with the path to your localization folder
+        
+        files = os.listdir(localization_dir)
+        available_languages = ["auto"]
+        available_languages.extend([lang.replace(".json", "") for lang in files if lang.endswith(".json")])
+        return available_languages
 
     def create_settings_ui(self):
         settings = self.ui.settings
@@ -29,7 +41,8 @@ class MySettingsWindow(QDialog):
 
         # ComboBox for language selection
         self.language_combobox = QComboBox()
-        self.language_combobox.addItems(["auto", "en_US", "pt_BR"])  # Add your languages
+        languages = self.update_languages()
+        self.language_combobox.addItems(languages)  # Add your languages
         self.language_combobox.setCurrentText(settings['Language'])
         layout.addWidget(self.language_combobox)
         
