@@ -1,3 +1,4 @@
+from genericpath import isdir
 import os
 import shutil
 import subprocess
@@ -18,7 +19,7 @@ def get_program_path(exe_name="UniClean.exe"):
     return program_path
 
 def cleanup(item):
-    item_path = os.path.join(item + ".spec")
+    item_path = os.path.basename(item) + ".spec"
     if os.path.exists(item_path):
         os.remove(item_path)
     
@@ -27,9 +28,12 @@ def clean_up_all():
     build = os.path.join("build")
     
     if os.path.exists(dist):
-        for item in os.listdir(build):
-            if "installer" not in item:
-                os.remove(item)
+        for item in os.listdir(dist):
+            if "installer-" not in item:
+                if os.path.isdir(os.path.join(dist, item)):
+                    shutil.rmtree(os.path.join(dist, item))
+                else:
+                    os.remove(os.path.join(dist, item))
     
     if os.path.exists(build):
         shutil.rmtree(build)
@@ -84,7 +88,7 @@ def generate_executable(script_name, exe_name):
                 "--name",
                 exe_name,  # Set the name of the generated executable
                 "--onefile",
-                #"--noconsole",
+                "--noconsole",
                 "--uac-admin",
                 "--add-data",
                 f"{icon_path};.",
@@ -101,7 +105,7 @@ def generate_executable(script_name, exe_name):
             f"Executable '{script_name}.exe' created successfully in the 'dist' folder."
         )
         
-        cleanup(script_name)
+        cleanup(exe_name)
 
     except subprocess.CalledProcessError as e:
         print(f"Error: {e}")
