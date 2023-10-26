@@ -1,4 +1,16 @@
 {
+  "InstallUI": {
+    "WelcomeScreen": "Welcome to the UniClean installer!\nWe'll help you trough this\nsuper-easy-process of three steps!\nTo start, click Next.",
+    "TargetDirectory": "Target Directory",
+    "SelectTargetDirectory": "Select the target Directory",
+    "ChangeDirectory": "Change Directory",
+    "InstallationComplete": "Installation Complete",
+    "WillBeInstalledIn": "Will be installed in",
+    "AreYouSure": "Are you sure you want to install",
+    "InstallationProgress": "Installation Progress",
+    "Install": "Install",
+    "Installer": "Installer"
+  },
   "MenuBar": {
     "Settings": "Settings",
     "Help": "Help",
@@ -8,11 +20,14 @@
   },
   "AppUI": {
     "Uninstall": "Uninstall",
+    "Uninstaller": "Uninstaller",
     "InvalidDirectory": "Directory is invalid or empty",
     "DetectedUninstaller": "Detected uninstaller:",
     "MainExe": "Main executable file",
     "Uninstalled": "Uninstalled",
     "UninstallError": "Uninstall error",
+    "FastModeEnabled": "Fast Mode Enabled",
+    "FastModeToBeRemoved": "These below will be removed when you press continue",
     "Checkboxes": {
       "Programs": {
         "LabelText": "Program paths",
@@ -59,7 +74,11 @@
       "Confirm": "Confirm",
       "Save": "Save",
       "AreYouSure": "Are you sure?",
-      "Update": "Update"
+      "Update": "Update",
+      "Next": "Next",
+      "Previous": "Previous",
+      "Close": "Close",
+      "Continue": "Continue"
     }
   },
   "Windows": {
@@ -70,12 +89,12 @@
       "Newer": "Newer",
       "UpToDate": "Up to date",
       "Older": "Older",
-      "Creator": "Creator",
+      "Creator": "Creator"
     },
     "Settings": {
-      "SelectLanguage": "Select Language:",
+      "SelectLanguage": "Select Language",
+      "SelectTheme": "Select Theme",
       "EnableFastMode": "Enable Fast Mode"
     }
   }
-
 }

@@ -7,34 +7,52 @@ class MySettingsWindow(QDialog):
         self.strings = ui.strings
 
         self.setWindowTitle(self.strings['MenuBar']['Settings'])
-
-        self.create_settings_ui()
         
         self.ui = ui
         
         self.current_version = ui.uninstaller.current_version
+        self.language_combobox = None
+        self.fast_mode_checkbox = None
+
+        self.create_settings_ui()
 
     def create_settings_ui(self):
+        settings = self.ui.settings
         layout = QVBoxLayout()
 
         # Center-align the layout within the dialog
         layout.setAlignment(Qt.AlignmentFlag.AlignCenter)
 
         # Label for selecting language
-        lang_label = QLabel(self.strings['Windows']['Settings']['SelectLanguage'])
+        lang_label = QLabel(f"{self.strings['Windows']['Settings']['SelectLanguage']}:")
         layout.addWidget(lang_label)
 
         # ComboBox for language selection
-        language_combobox = QComboBox()
-        language_combobox.addItems(["English", "French", "Spanish"])  # Add your languages
-        layout.addWidget(language_combobox)
+        self.language_combobox = QComboBox()
+        self.language_combobox.addItems(["auto", "en_US", "pt_BR"])  # Add your languages
+        self.language_combobox.setCurrentText(settings['Language'])
+        layout.addWidget(self.language_combobox)
+        
+        # Add spacing between the buttons
+        layout.addSpacing(35)
+        
+        # Label for selecting language
+        theme_label = QLabel(f"{self.strings['Windows']['Settings']['SelectTheme']}:")
+        layout.addWidget(theme_label)
+
+        # ComboBox for language selection
+        self.theme_combobox = QComboBox()
+        self.theme_combobox.addItems(["auto", "Dark", "Light"])  # Add your languages
+        self.theme_combobox.setCurrentText(settings['Theme'])
+        layout.addWidget(self.theme_combobox)
         
         # Add spacing between the buttons
         layout.addSpacing(35)
 
         # Checkbox for enabling fast mode
-        fast_mode_checkbox = QCheckBox(self.strings['Windows']['Settings']['EnableFastMode'])
-        layout.addWidget(fast_mode_checkbox)
+        self.fast_mode_checkbox = QCheckBox(self.strings['Windows']['Settings']['EnableFastMode'])
+        self.fast_mode_checkbox.setChecked(settings['FastMode'])
+        layout.addWidget(self.fast_mode_checkbox)
         
         # Add spacing between the buttons
         layout.addSpacing(25)
@@ -47,7 +65,9 @@ class MySettingsWindow(QDialog):
         self.setLayout(layout)
 
     def save_settings(self):
-        pass
-        # Implement the logic to save the selected settings here
-        # You can retrieve the selected language and fast mode checkbox state
-        # and update your application settings accordingly
+        settings = self.ui.settings
+        settings["Language"] = self.language_combobox.currentText()
+        settings["Theme"] = self.theme_combobox.currentText()
+        settings["FastMode"] = self.fast_mode_checkbox.isChecked()
+        self.ui.save_settings(settings)
+        self.close()

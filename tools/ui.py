@@ -20,6 +20,7 @@ from PyQt6.QtWidgets import (
     QHBoxLayout,
     QMenu,
     QDialog,
+    QTextEdit
 )
 
 
@@ -39,9 +40,9 @@ class UninstallerUI:
         self.selected_processes = []
         self.program_dir = program_dir
         self.icon = os.path.join(program_dir, "icon.ico")
-        self.strings = None
-        self.load_strings()
-        print(self.strings)
+        self.settings = self.load_settings()
+        self.strings = self.load_strings()
+        
 
     def load_strings(self):
         """
@@ -51,19 +52,59 @@ class UninstallerUI:
         """
         # Path to the localization folder
         localization_dir = os.path.join(self.program_dir, "localization")  # Replace with the path to your localization folder
-    
-        # Get the default system language
-        system_language = locale.getdefaultlocale()[0]
         
-        print(system_language)
-    
+        print(self.settings['Language'])
+        
+        if self.settings['Language'] == 'auto':
+            # Get the default system language
+            system_language = locale.getdefaultlocale()[0]
+        else:
+            system_language = self.settings['Language']
+            
         # Define the desired language code (fallback to "en" if not found)
-        language = system_language if os.path.exists(os.path.join(localization_dir, f"strings_{system_language}.json")) else "en"
+        language = system_language if os.path.exists(os.path.join(localization_dir, f"strings_{system_language}.json")) else "en_US"
 
         strings_file = os.path.join(localization_dir, f"strings_{language}.json")
+        
+        strings = {}
 
         with open(strings_file, "r", encoding="utf-8") as file:
-            self.strings = json.load(file)
+            strings = json.load(file)
+        return strings
+    
+    def load_settings(self):
+        """
+        Load settings from the setting folder.
+
+        :return: None
+        """
+        # Path to the setting folder
+        setting_dir = os.path.join(self.program_dir, "settings")  # Replace with the path to your setting folder
+        strings_file = os.path.join(setting_dir, "settings.json")
+        
+        settings = {}
+
+        try:
+            with open(strings_file, "r", encoding="utf-8") as file:
+                settings = json.load(file)
+        except Exception as e:
+            print(e)
+
+        return settings
+    
+    def save_settings(self, settings):
+        """
+        Save settings to the setting folder.
+
+        :param settings: A dictionary containing the settings.
+        :return: None
+        """
+        # Path to the setting folder
+        setting_dir = os.path.join(self.program_dir, "settings")  # Replace with the path to your setting folder
+        strings_file = os.path.join(setting_dir, "settings.json")
+
+        with open(strings_file, "w", encoding="utf-8") as file:
+            json.dump(settings, file, indent=4)
 
     def close_ui(self):
         self.app.quit()
@@ -173,6 +214,80 @@ class UninstallerUI:
     def open_settings_window(self):
         settings_window = self.uninstaller.settings_window
         settings_window.exec()
+        
+    def is_fast_mode(self, program_paths, uninstaller_exe, filtered_exe, executable_paths, registry_files, open_processes):
+        if self.settings['FastMode']:
+            # Create a dialog box to show what will be removed
+            fast_mode_dialog = QDialog(self.main_window)
+            fast_mode_dialog.setWindowTitle(self.strings['AppUI']['FastModeEnabled'])
+
+            # Create a label to display the list of items to be removed
+            removal_list_label = QLabel(self.strings['AppUI']['FastModeToBeRemoved'])
+            removal_list_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
+
+            # Create a list to hold the items to be removed
+            removal_list = []
+
+            if program_paths:
+                removal_list.append(f"{self.strings['AppUI']['Checkboxes']['Programs']} ({len(program_paths)}):")
+                removal_list.extend(program_paths)
+
+            if uninstaller_exe:
+                removal_list.append(f"{self.strings['AppUI']['Uninstaller']}:")
+                removal_list.append(uninstaller_exe)
+
+            if filtered_exe and filtered_exe != uninstaller_exe:
+                removal_list.append(f"{self.strings['AppUI']['MainExe']}:")
+                removal_list.append(filtered_exe)
+
+            if executable_paths:
+                removal_list.append(f"{self.strings['AppUI']['Checkboxes']['Executables']} ({len(executable_paths)}):")
+                removal_list.extend(executable_paths)
+
+            if registry_files:
+                removal_list.append(f"{self.strings['AppUI']['Checkboxes']['Registry']} ({len(registry_files)}):")
+                removal_list.extend(registry_files)
+
+            if open_processes:
+                removal_list.append(f"{self.strings['AppUI']['Checkboxes']['Processes']} ({len(open_processes)}):")
+                for process in open_processes:
+                    removal_list.append(f"- PID: {process.pid} | {process.name()}")
+
+            # Create a QTextEdit widget to display the removal list
+            removal_list_textedit = QTextEdit(fast_mode_dialog)
+            removal_list_textedit.setReadOnly(True)
+            removal_list_textedit.setPlainText("\n".join(removal_list))
+
+            # Create a "Continue" button
+            continue_button = QPushButton(self.strings['AppUI']['Buttons']['Continue'])
+            continue_button.clicked.connect(fast_mode_dialog.accept)
+
+            # Create a "Cancel" button
+            cancel_button = QPushButton(self.strings['AppUI']['Buttons']['Cancel'])
+            cancel_button.clicked.connect(fast_mode_dialog.reject)
+
+            # Create a layout for the dialog box
+            dialog_layout = QVBoxLayout()
+            dialog_layout.addWidget(removal_list_label)
+            dialog_layout.addWidget(removal_list_textedit)
+            button_layout = QHBoxLayout()
+            button_layout.addWidget(continue_button)
+            button_layout.addWidget(cancel_button)
+            dialog_layout.addLayout(button_layout)
+
+            fast_mode_dialog.setLayout(dialog_layout)
+
+            # Show the fast mode dialog and wait for user input
+            result = fast_mode_dialog.exec()
+
+            if result == QDialog.Accepted:
+                # User clicked "Continue," proceed with uninstallation
+                self.uninstall_selected_items()
+            else:
+                # User clicked "Cancel," do nothing or close the application
+                pass
+            return True
+        return False
 
     def create_confirmation_ui(self):
         self.app = QApplication([])
@@ -222,6 +337,11 @@ class UninstallerUI:
             main_layout.addWidget(self.uninstall_button)
             not_found = True
         else:
+            is_fast_mode = self.is_fast_mode(program_paths, uninstaller_exe, filtered_exe, executable_paths, registry_files, open_processes)
+            
+            if is_fast_mode:
+                return
+
             main_window.setMinimumWidth(1280)
             main_window.setMinimumHeight(720)
             checkboxes = []

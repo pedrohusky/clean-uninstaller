@@ -1,8 +1,10 @@
 import ctypes
+import json
 import locale
 import os
 import shutil
 import sys
+from threading import local
 
 import qdarktheme
 from PyQt6.QtCore import Qt, QThread, pyqtSignal
@@ -26,25 +28,6 @@ app_name = "UniClean"
 app_version = "1.0"
 app_publisher = "PedroHusky"
 
-language_translations = {
-    "en_US": "Uninstall",
-    "es_ES": "Desinstalar",  # Spanish
-    "fr_FR": "Désinstaller",  # French
-    "de_DE": "Deinstallieren",  # German
-    "it_IT": "Disinstalla",  # Italian
-    "pt_BR": "Desinstalar",  # Portuguese
-    "zh_CN": "卸载",  # Chinese (Simplified)
-    "ja_JP": "アンインストール",  # Japanese
-    "ko_KR": "제거",  # Korean
-    "ru_RU": "Деинсталляция",  # Russian
-    "ar_SA": "إلغاء التثبيت",  # Arabic (Saudi Arabia)
-    "hi_IN": "अनइंस्टॉल करें",  # Hindi
-    "tr_TR": "Kaldır",  # Turkish
-    "nl_NL": "Deïnstalleren",  # Dutch
-    "sv_SE": "Avinstallera",  # Swedish
-    "pl_PL": "Odinstaluj",  # Polish
-    # Add more languages and translations as needed
-}
 
 if getattr(sys, "frozen", False):
     # If the application is run as a bundle, the PyInstaller bootloader
@@ -53,14 +36,38 @@ if getattr(sys, "frozen", False):
     MAIN_EXECUTABLE_PATH = sys._MEIPASS
 else:
     MAIN_EXECUTABLE_PATH = os.path.dirname(os.path.abspath(__file__))
+    
+
+def load_strings():
+    """
+    Load strings from the localization folder based on the system language.
+
+    :return: None
+    """
+    # Path to the localization folder
+    localization_dir = os.path.join(MAIN_EXECUTABLE_PATH, "localization")  # Replace with the path to your localization folder
+    
+    # Get the default system language
+    system_language = locale.getdefaultlocale()[0]
+    
+    # Define the desired language code (fallback to "en" if not found)
+    language = system_language if os.path.exists(os.path.join(localization_dir, f"strings_{system_language}.json")) else "en"
+
+    strings_file = os.path.join(localization_dir, f"strings_{language}.json")
+    
+    strings = {}
+
+    with open(strings_file, "r", encoding="utf-8") as file:
+        strings = json.load(file)
+    return strings
+
+
+localization = load_strings()
 
 
 def get_custom_menu_name():
-    # Get the current OS language
-    os_language = locale.getdefaultlocale()[0]
-
     # Use the language to determine the custom menu name
-    custom_menu_name = language_translations.get(os_language, "Uninstall Program")
+    custom_menu_name = localization["AppUI"]["Uninstall"]
     return custom_menu_name
 
 
@@ -161,11 +168,13 @@ def copy_program_to_installation_directory(
 
         print(f"New dir: {new_dir}")
 
-        if os.path.isdir(new_dir):
-            output_path = os.path.join(final_path, "localization")
-            if os.path.exists(output_path):
-                shutil.rmtree(output_path)
+        if "." not in os.path.basename(new_dir):
+            output_path = os.path.join(final_path, name)
             print(f"Trying to copy {path} to {output_path}")
+            if os.path.exists(output_path):
+                print(f"Deleting {output_path}")
+                shutil.rmtree(output_path)
+                print(f"Deleted {output_path}")
             shutil.copytree(path, output_path)
         else:
             shutil.copy2(path, new_dir)
@@ -188,7 +197,7 @@ class InstallationThread(QThread):
         menu_name = (
             get_custom_menu_name()
         )  # Replace with the name of the command you want to add
-        self.update_progress.emit(25)
+        self.update_progress.emit(5)
         new_folder = copy_program_to_installation_directory(
             program_script_path, selected_path=self.target_dir
         )
@@ -198,10 +207,16 @@ class InstallationThread(QThread):
             "icon.ico",
             selected_path=self.target_dir,
         )
-        self.update_progress.emit(55)
+        self.update_progress.emit(45)
         copy_program_to_installation_directory(
             os.path.join(MAIN_EXECUTABLE_PATH, "localization"),
             "localization",
+            selected_path=self.target_dir,
+        )
+        self.update_progress.emit(60)
+        copy_program_to_installation_directory(
+            os.path.join(MAIN_EXECUTABLE_PATH, "settings"),
+            "settings",
             selected_path=self.target_dir,
         )
         self.update_progress.emit(75)
@@ -246,7 +261,7 @@ class InstallerUI(QMainWindow):
         self.target_dir_label = None
         self.selected_path = ""
 
-        self.setWindowTitle("UniClean Installer")
+        self.setWindowTitle(f"UniClean {localization['InstallUI']['Installer']}")
         self.setGeometry(100, 100, 300, 200)
 
         qdarktheme.setup_theme("auto")
@@ -304,35 +319,32 @@ class InstallerUI(QMainWindow):
         image.setPixmap(self.icon.pixmap(128, 128))
         layout.addWidget(image, alignment=Qt.AlignmentFlag.AlignCenter)
         label = QLabel(
-            "Welcome to the UniClean installer!\n"
-            "We'll help you trough this\n"
-            "super-easy-process of three steps!\n"
-            "To start, click Next."
+            localization["InstallUI"]["WelcomeScreen"]
         )
         layout.addWidget(label, alignment=Qt.AlignmentFlag.AlignCenter)
-        next_button = QPushButton("Next")
+        next_button = QPushButton(localization["AppUI"]["Buttons"]["Next"])
         next_button.clicked.connect(self.next_screen)
         layout.addWidget(next_button)
         self.welcome_screen.setLayout(layout)
 
     def setup_path_selection_screen(self):
         layout = QVBoxLayout()
-        label = QLabel("Select the target directory:")
+        label = QLabel(f"{localization['InstallUI']['SelectTargetDirectory']}:")
         layout.addWidget(label, alignment=Qt.AlignmentFlag.AlignCenter)
 
         default_dir = os.path.join(os.environ["ProgramFiles"], app_name)
         self.selected_path = default_dir
 
-        self.target_dir_label = QLabel(f"Target Directory: {default_dir}")
-        select_target_button = QPushButton("Select Target")
+        self.target_dir_label = QLabel(f"{localization['InstallUI']['TargetDirectory']}: {default_dir}")
+        select_target_button = QPushButton(localization['InstallUI']['ChangeDirectory'])
         select_target_button.clicked.connect(self.select_target_directory)
 
         layout.addWidget(self.target_dir_label, alignment=Qt.AlignmentFlag.AlignCenter)
         layout.addWidget(select_target_button)
 
-        prev_button = QPushButton("Previous")
+        prev_button = QPushButton(localization['AppUI']['Buttons']['Previous'])
         prev_button.clicked.connect(self.previous_screen)
-        next_button = QPushButton("Next")
+        next_button = QPushButton(localization['AppUI']['Buttons']['Next'])
         next_button.clicked.connect(self.next_screen)
 
         button_layout = QHBoxLayout()
@@ -343,16 +355,16 @@ class InstallerUI(QMainWindow):
         self.path_selection_screen.setLayout(layout)
 
     def select_target_directory(self):
-        target_dir = QFileDialog.getExistingDirectory(self, "Select Target Directory")
-        self.target_dir_label.setText(f"Target Directory: {target_dir}")
+        target_dir = QFileDialog.getExistingDirectory(self, localization['InstallUI']['SelectTargetDirectory'])
+        self.target_dir_label.setText(f"{localization['InstallUI']['TargetDirectory']}: {target_dir}")
         self.selected_path = target_dir
 
     def setup_final_screen(self):
         layout = QVBoxLayout()
-        label = QLabel("Installation Complete!")
+        label = QLabel(f"{localization['InstallUI']['InstallationComplete']}!")
         layout.addWidget(label, alignment=Qt.AlignmentFlag.AlignCenter)
         # Add the close button to close the installer
-        close_button = QPushButton("Close")
+        close_button = QPushButton(localization['AppUI']['Buttons']['Close'])
         close_button.clicked.connect(self.close)
         layout.addWidget(close_button, alignment=Qt.AlignmentFlag.AlignCenter)
         self.final_screen.setLayout(layout)
@@ -360,16 +372,16 @@ class InstallerUI(QMainWindow):
     def setup_summary_screen(self):
         layout = QVBoxLayout()
         label = QLabel(
-            f"Will be installed in: {self.selected_path}\n\n"
-            "Are you sure you want to install ?"
+            f"{localization['InstallUI']['WillBeInstalledIn']}: {self.selected_path}\n\n"
+            f"{localization['InstallUI']['AreYouSure']} ?"
         )
         layout.addWidget(label)
 
         # Add summary information here
 
-        prev_button = QPushButton("Previous")
+        prev_button = QPushButton(localization['AppUI']['Buttons']['Previous'])
         prev_button.clicked.connect(self.previous_screen)
-        next_button = QPushButton("Install")
+        next_button = QPushButton(localization['InstallUI']['Install'])
         next_button.clicked.connect(self.next_screen)
 
         button_layout = QHBoxLayout()
@@ -384,15 +396,15 @@ class InstallerUI(QMainWindow):
 
     def setup_installation_screen(self):
         layout = QVBoxLayout()
-        label = QLabel("Installation Progress:")
+        label = QLabel(f"{localization['InstallUI']['InstallationProgress']}:")
         layout.addWidget(label)
 
         self.progress_bar = QProgressBar()
         layout.addWidget(self.progress_bar)
 
-        install_button = QPushButton("Cancel")
-        install_button.clicked.connect(self.cancel_installation)
-        layout.addWidget(install_button)
+        cancel_button = QPushButton(localization['AppUI']['Buttons']['Cancel'])
+        cancel_button.clicked.connect(self.cancel_installation)
+        layout.addWidget(cancel_button)
 
         self.installation_screen.setLayout(layout)
 

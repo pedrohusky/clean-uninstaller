@@ -1,4 +1,5 @@
 import os
+import shutil
 import subprocess
 import sys
 
@@ -16,6 +17,26 @@ def get_program_path(exe_name="UniClean.exe"):
     )  # Build the path to Clean Uninstall.exe
     return program_path
 
+def cleanup(item):
+    item_path = os.path.join(item + ".spec")
+    if os.path.exists(item_path):
+        os.remove(item_path)
+    
+def clean_up_all():
+    dist = os.path.join("dist")
+    build = os.path.join("build")
+    
+    if os.path.exists(dist):
+        for item in os.listdir(build):
+            if "installer" not in item:
+                os.remove(item)
+    
+    if os.path.exists(build):
+        shutil.rmtree(build)
+    
+    
+    
+
 
 def generate_executable(script_name, exe_name):
     try:
@@ -27,6 +48,10 @@ def generate_executable(script_name, exe_name):
         )
         localization_path = os.path.join(
             os.path.abspath(os.path.dirname(__file__)), "localization"
+        )
+        
+        settings_path = os.path.join(
+            os.path.abspath(os.path.dirname(__file__)), "settings"
         )
 
         # Prepare the PyInstaller command
@@ -46,6 +71,8 @@ def generate_executable(script_name, exe_name):
                 f"{icon_path};.",
                 "--add-data",
                 f"{localization_path};localization",
+                "--add-data",
+                f"{settings_path};settings",
                 "--icon",
                 f"{icon_path}",
                 # Add "UniClean.exe" to the root directory of the generated executable
@@ -57,7 +84,7 @@ def generate_executable(script_name, exe_name):
                 "--name",
                 exe_name,  # Set the name of the generated executable
                 "--onefile",
-                "--noconsole",
+                #"--noconsole",
                 "--uac-admin",
                 "--add-data",
                 f"{icon_path};.",
@@ -73,6 +100,8 @@ def generate_executable(script_name, exe_name):
         print(
             f"Executable '{script_name}.exe' created successfully in the 'dist' folder."
         )
+        
+        cleanup(script_name)
 
     except subprocess.CalledProcessError as e:
         print(f"Error: {e}")
@@ -84,6 +113,8 @@ if __name__ == "__main__":
     script_location = os.path.abspath(__file__)
 
     platform = sys.platform
+    
+    clean_up_all()
 
     if platform == "linux" or platform == "darwin":
         path_separator = "/"
@@ -108,3 +139,5 @@ if __name__ == "__main__":
             f"tools{path_separator}install_ui.py",
             exe_name=f"UniClean-installer-v1.0{exe_extension}",
         )  # Pass the desired executable name
+        
+    clean_up_all()
