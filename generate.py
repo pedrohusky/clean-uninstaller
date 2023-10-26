@@ -3,7 +3,8 @@ import os
 import shutil
 import subprocess
 import sys
-
+import concurrent.futures
+import time
 
 def get_program_path(exe_name="UniClean.exe"):
     if getattr(sys, "frozen", False):  # Check if running as a PyInstaller executable
@@ -129,22 +130,22 @@ if __name__ == "__main__":
     else:
         path_separator = "\\"
         exe_extension = ".exe"  # Add .exe extension for Windows
+        
+    start_time = time.time()  # Record the start time
 
-    # The script_name is the name of the script you want to convert to an EXE.
-    # In this case, we are using "installer.py".
-    generate_executable(
-        f"clean_uninstall.py", exe_name=f"UniClean{exe_extension}"
-    )  # Pass the desired executable name
+    # Create a ThreadPoolExecutor to generate the uninstaller and UniClean concurrently
+    with concurrent.futures.ThreadPoolExecutor(max_workers=2) as executor:
+        uninstaller_future = executor.submit(generate_executable, f"tools{path_separator}uninstaller.py", f"uninstaller{exe_extension}")
+        uniclean_future = executor.submit(generate_executable, f"clean_uninstall.py", f"UniClean{exe_extension}")
 
-    # See if platform is windows
-    if platform == "win32":
-        generate_executable(
-            f"tools{path_separator}uninstaller.py",
-            exe_name=f"uninstaller{exe_extension}",
-        )  # Pass the desired executable name
-        generate_executable(
-            f"tools{path_separator}install_ui.py",
-            exe_name=f"UniClean-installer-v1.0{exe_extension}",
-        )  # Pass the desired executable name
+        # Wait for both tasks to complete
+        concurrent.futures.wait([uninstaller_future, uniclean_future])
+
+    # Now that both the uninstaller and UniClean are generated, generate the installer
+    generate_executable(f"tools{path_separator}install_ui.py", f"UniClean-installer-v1.0{exe_extension}")
+    
+    # Calculate the time spent on generating the installer
+    elapsed_time = time.time() - start_time
+    print(f"Time spent on generating the installer: {elapsed_time:.2f} seconds")
         
     clean_up_all(False)
