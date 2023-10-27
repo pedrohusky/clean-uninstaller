@@ -22,7 +22,7 @@
     "Uninstall": "Uninstall",
     "Uninstaller": "Uninstaller",
     "InvalidDirectory": "Directory is invalid or empty",
-    "DetectedUninstaller": "Detected uninstaller:",
+    "DetectedUninstaller": "Detected uninstaller",
     "MainExe": "Main executable file",
     "Uninstalled": "Uninstalled",
     "UninstallError": "Uninstall error",

@@ -173,6 +173,7 @@ class UninstallerUI:
             )
 
         icon_label = QLabel()
+        icon_label.setToolTip(label_text)
         icon_label.setPixmap(icon.pixmap(64, 64))
 
         label_layout = QHBoxLayout()
@@ -386,7 +387,7 @@ class UninstallerUI:
                 self.main_layout.addWidget(
                     self.generate_label_with_icon(
                         uninstaller_exe,
-                        self.strings["AppUI"]["DetectedUninstaller"],
+                        f"{self.strings['AppUI']['DetectedUninstaller']}:",
                         icon=uninstaller_exe,
                     ),
                     alignment=Qt.AlignmentFlag.AlignCenter,
@@ -396,7 +397,7 @@ class UninstallerUI:
                 self.main_layout.addWidget(
                     self.generate_label_with_icon(
                         filtered_exe,
-                        self.strings["AppUI"]["MainExe"],
+                        f"{self.strings['AppUI']['MainExe']}:",
                         icon=filtered_exe,
                     ),
                     alignment=Qt.AlignmentFlag.AlignCenter,
