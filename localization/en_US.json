@@ -89,7 +89,8 @@
       "Newer": "Newer",
       "UpToDate": "Up to date",
       "Older": "Older",
-      "Creator": "Creator"
+      "Creator": "Creator",
+      "Download": "Download"
     },
     "Settings": {
       "SelectLanguage": "Select Language",

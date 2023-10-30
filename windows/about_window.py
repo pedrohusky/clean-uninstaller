@@ -47,7 +47,7 @@ class MyAboutWindow(QDialog):
 
         # Label for displaying the current version
         version_label = QLabel(
-            f"{self.strings['Windows']['About']['CurrentVersion']}: 1.0", self
+            f"{self.strings['Windows']['About']['CurrentVersion']}: {self.current_version}", self
         )  # Replace with your app's version
         layout.addWidget(version_label)
 
@@ -90,14 +90,32 @@ class MyAboutWindow(QDialog):
                         (asset for asset in assets if asset["name"].endswith(".exe")),
                         None,
                     )
+                    
+                    released_version = float(first_release["tag_name"].replace("v", ""))
 
                     if exe_asset:
-                        if self.current_version != first_release["tag_name"]:
-                            print(
-                                f"{self.strings['Windows']['About']['NewVersion']}: {first_release['tag_name']}"
+                        if self.current_version < released_version:
+                            # Are you sure messagebox
+                            messagebox = QMessageBox()
+                            messagebox.setWindowIcon(self.ui.icon)
+                            messagebox.setWindowTitle(
+                                f'{self.strings["Windows"]["About"]["NewVersion"]} {first_release["tag_name"]}'
                             )
-                            # Open the URL of the .exe file
-                            webbrowser.open(exe_asset["browser_download_url"])
+                            messagebox.setText(
+                                f'{self.strings["Windows"]["About"]["NewVersion"]}, download it?'
+                            )
+                            messagebox.addButton(
+                                QMessageBox.StandardButton.Yes
+                            )
+                            messagebox.setDefaultButton(QMessageBox.StandardButton.No)
+                            messagebox.setIcon(QMessageBox.Icon.Information)
+                            result = messagebox.exec()
+                            
+                            if result == 65536 or not result:
+                                return
+                            else:
+                                # Open the URL of the .exe file
+                                webbrowser.open(exe_asset["browser_download_url"])
                         else:
                             # Are you sure messagebox
                             messagebox = QMessageBox()

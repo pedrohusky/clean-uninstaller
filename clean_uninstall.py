@@ -12,7 +12,7 @@ from windows.about_window import MyAboutWindow
 class Uninstaller:
     def __init__(self, path):
         super().__init__()
-        self.current_version = "v1.1"
+        self.current_version = 1.1
         self.path = path
         self.folder_name = os.path.basename(path)
         self.program_name = ""
